@@ -11,7 +11,7 @@ import (
 	"github.com/sky0621/wolf-bff/src/graph/generated"
 )
 
-const defaultPort = "8080"
+const defaultPort = "8765"
 
 func main() {
 	port := os.Getenv("PORT")
