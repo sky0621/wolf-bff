@@ -7,10 +7,24 @@ interface Node {
   id: ID!
 }
 
-type Query {
+type MutationResponse {
+  id: ID
+}
 
+type Query {
+  node(id: ID!): Node
 }
 
 type Mutation {
-
+  noop(input: NoopInput): NoopPayload
 }
+
+input NoopInput {
+  clientMutationId: String
+}
+
+type NoopPayload {
+  clientMutationId: String
+}
+
+scalar Date

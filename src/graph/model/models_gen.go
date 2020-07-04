@@ -2,19 +2,138 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+import (
+	"fmt"
+	"io"
+	"strconv"
+)
+
+// コンテンツ
+type Content interface {
+	IsContent()
 }
 
-type Todo struct {
-	ID   string `json:"id"`
+type Node interface {
+	IsNode()
+}
+
+// 画像コンテンツ
+type ImageContent struct {
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 画像パス
+	Path string `json:"path"`
+}
+
+func (ImageContent) IsContent() {}
+
+type MutationResponse struct {
+	ID *string `json:"id"`
+}
+
+type NoopInput struct {
+	ClientMutationID *string `json:"clientMutationId"`
+}
+
+type NoopPayload struct {
+	ClientMutationID *string `json:"clientMutationId"`
+}
+
+// テキストコンテンツ
+type TextContent struct {
+	// コンテンツ名
+	Name *string `json:"name"`
+	// テキスト
 	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
 }
 
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+func (TextContent) IsContent() {}
+
+// 今日こと
+type Wht struct {
+	// ID
+	ID string `json:"id"`
+	// 記録日
+	RecordDate string `json:"recordDate"`
+	// タイトル
+	Title *string `json:"title"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
+	// コンテンツ
+	Content Content `json:"content"`
+}
+
+func (Wht) IsNode() {}
+
+// 「今日こと」検索条件
+type WhtConditionInput struct {
+	// ID
+	ID *string `json:"id"`
+}
+
+// 「今日こと」画像インプット
+type WhtImageInput struct {
+	// タイトル
+	Title *string `json:"title"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// 画像パス
+	Path string `json:"path"`
+}
+
+// 「今日こと」テキストインプット
+type WhtTextInput struct {
+	// タイトル
+	Title *string `json:"title"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// テキスト
+	Text string `json:"text"`
+}
+
+// コンテンツタイプ
+type ContentType string
+
+const (
+	// テキスト
+	ContentTypeText ContentType = "Text"
+	// 画像
+	ContentTypeImage ContentType = "Image"
+	// その他
+	ContentTypeOther ContentType = "Other"
+)
+
+var AllContentType = []ContentType{
+	ContentTypeText,
+	ContentTypeImage,
+	ContentTypeOther,
+}
+
+func (e ContentType) IsValid() bool {
+	switch e {
+	case ContentTypeText, ContentTypeImage, ContentTypeOther:
+		return true
+	}
+	return false
+}
+
+func (e ContentType) String() string {
+	return string(e)
+}
+
+func (e *ContentType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = ContentType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid ContentType", str)
+	}
+	return nil
+}
+
+func (e ContentType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }

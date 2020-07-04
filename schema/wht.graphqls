@@ -1,0 +1,92 @@
+
+extend type Query {
+    "「今日こと」"
+    findWht(condition: WhtConditionInput): [Wht!]!
+}
+
+extend type Mutation {
+    "「今日こと」テキストコンテンツを登録"
+    createWhtText(content: WhtTextInput!): MutationResponse
+    "「今日こと」画像コンテンツを登録"
+    createWhtImage(content: WhtImageInput!): MutationResponse
+}
+
+# -------------------------------------------------------------------
+# type
+# -------------------------------------------------------------------
+
+"今日こと"
+type Wht implements Node{
+    "ID"
+    id: ID!
+    "記録日"
+    recordDate: Date!
+    "タイトル"
+    title: String
+    "コンテンツタイプ"
+    contentType: ContentType!
+    "コンテンツ"
+    content: Content
+}
+
+"コンテンツタイプ"
+enum ContentType {
+    "テキスト"
+    Text
+    "画像"
+    Image
+    "その他"
+    Other
+}
+
+"コンテンツ"
+interface Content {
+    "コンテンツ名"
+    name: String
+}
+
+"テキストコンテンツ"
+type TextContent implements Content {
+    "コンテンツ名"
+    name: String
+    "テキスト"
+    text: String!
+}
+
+"画像コンテンツ"
+type ImageContent implements Content {
+    "コンテンツ名"
+    name: String
+    "画像パス"
+    path: String!
+}
+
+# -------------------------------------------------------------------
+# input
+# -------------------------------------------------------------------
+
+"「今日こと」検索条件"
+input WhtConditionInput {
+    "ID"
+    id: ID
+}
+
+"「今日こと」テキストインプット"
+input WhtTextInput {
+    "タイトル"
+    title: String
+    "コンテンツ名"
+    name: String
+    "テキスト"
+    text: String!
+}
+
+"「今日こと」画像インプット"
+input WhtImageInput {
+    "タイトル"
+    title: String
+    "コンテンツ名"
+    name: String
+    "画像パス"
+    path: String!
+}
