@@ -1,19 +1,26 @@
 package system
 
 import (
+	"context"
 	"os"
 
 	"github.com/rs/zerolog"
 )
 
 type Logger interface {
+	WithRequestContext(ctx context.Context) *zerolog.Logger
 }
 
 type logger struct {
-	l zerolog.Logger
+	zLog zerolog.Logger
 }
 
 func NewLogger(cfg Config) Logger {
 	l := zerolog.New(os.Stdout)
-	return &logger{l: l}
+	return &logger{zLog: l}
+}
+
+func (l *logger) WithRequestContext(ctx context.Context) *zerolog.Logger {
+	zLgr := l.zLog.With().Logger()
+	return &zLgr
 }
