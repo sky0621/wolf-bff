@@ -11,5 +11,5 @@ echo ${SCRIPT_DIR}
 cd ${SCRIPT_DIR} && cd ../src/cmd/bff
 
 # https://github.com/google/wire
-go get github.com/google/wire/cmd/wire@v0.4.0
+go get -u github.com/google/wire/cmd/wire@v0.4.0
 wire

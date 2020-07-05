@@ -7,8 +7,9 @@ type Web interface {
 
 type web struct {
 	cfg system.Config
+	log system.Logger
 }
 
-func NewWeb(cfg system.Config) Web {
-	return &web{cfg: cfg}
+func NewWeb(cfg system.Config, log system.Logger) Web {
+	return &web{cfg: cfg, log: log}
 }

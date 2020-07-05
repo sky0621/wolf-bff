@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  db:
+    restart: always
+    image: postgres:12-alpine
+    container_name: wolf-bff-db-container
+    ports:
+      - "25251:5432"
+    environment:
+      - DATABASE_HOST=localhost
+      - POSTGRES_DB=wht
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=whtpass
+      - PGPASSWORD=whtpass
+    volumes:
+      - ./docker/db/init:/docker-entrypoint-initdb.d/

@@ -6,21 +6,34 @@
 package main
 
 import (
-	"github.com/google/wire"
+	"context"
 	"github.com/sky0621/wolf-bff/src"
 	"github.com/sky0621/wolf-bff/src/driver"
 	"github.com/sky0621/wolf-bff/src/system"
 )
 
-// Injectors from di.go:
+// Injectors from wire.go:
 
-func di(cfg system.Config) wht.App {
-	rdb := driver.NewRDB(cfg)
-	web := driver.NewWeb(cfg)
-	app := wht.NewApp(cfg, rdb, web)
-	return app
+func build(ctx context.Context, cfg system.Config) (wht.App, error) {
+	logger := system.NewLogger(cfg)
+	rdb, err := driver.NewRDB(cfg, logger)
+	if err != nil {
+		return nil, err
+	}
+	web := driver.NewWeb(cfg, logger)
+	app := wht.NewApp(cfg, logger, rdb, web)
+	return app, nil
 }
 
-// di.go:
+// Injectors from wire_local.go:
 
-var set = wire.NewSet(system.NewLogger, driver.NewRDB, driver.NewWeb, wht.NewApp)
+func buildLocal(ctx context.Context, cfg system.Config) (wht.App, error) {
+	logger := system.NewLogger(cfg)
+	rdb, err := driver.NewRDB(cfg, logger)
+	if err != nil {
+		return nil, err
+	}
+	web := driver.NewWeb(cfg, logger)
+	app := wht.NewApp(cfg, logger, rdb, web)
+	return app, nil
+}

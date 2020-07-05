@@ -1,14 +1,19 @@
 package system
 
-import "github.com/rs/zerolog"
+import (
+	"os"
+
+	"github.com/rs/zerolog"
+)
 
 type Logger interface {
 }
 
 type logger struct {
-	l *zerolog.Logger
+	l zerolog.Logger
 }
 
-func NewLogger(l *zerolog.Logger) Logger {
+func NewLogger(cfg Config) Logger {
+	l := zerolog.New(os.Stdout)
 	return &logger{l: l}
 }

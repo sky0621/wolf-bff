@@ -1,12 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	wht "github.com/sky0621/wolf-bff/src"
 	"github.com/sky0621/wolf-bff/src/system"
 )
 
@@ -24,13 +25,27 @@ func main() {
 func execMain() exitCode {
 	cfg := system.NewConfig()
 	if cfg == nil {
-		log.Fatal()
+		log.Println("config is nil")
+		return abnormalEnd
 	}
 
-	//ctx := context.Background()
-
-	app := di(cfg)
-	defer app.Shutdown()
+	ctx := context.Background()
+	var app wht.App
+	var err error
+	if cfg.IsLocal() {
+		app, err = buildLocal(ctx, cfg)
+	} else {
+		app, err = build(ctx, cfg)
+	}
+	if err != nil {
+		log.Println(err)
+		return abnormalEnd
+	}
+	defer func() {
+		if app != nil {
+			app.Shutdown()
+		}
+	}()
 
 	// OSシグナル受信したらグレースフルシャットダウン
 	go func() {
@@ -38,11 +53,11 @@ func execMain() exitCode {
 		signal.Notify(q, os.Interrupt, os.Kill, syscall.SIGTERM)
 		<-q
 		app.Shutdown()
-		os.Exit(int(abnormalEnd))
+		os.Exit(abnormalEnd)
 	}()
 
 	if err := app.Start(); err != nil {
-		fmt.Errorf("the application failed to start")
+		log.Println(err)
 		return abnormalEnd
 	}
 	return normalEnd
