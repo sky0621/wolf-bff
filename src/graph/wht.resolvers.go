@@ -10,27 +10,6 @@ import (
 	"github.com/sky0621/wolf-bff/src/graph/model"
 )
 
-/*
-# mutation
-mutation createWhtText {
-  createWhtText(content: {
-    title: "たいとる１"
-    name: "こんてんつ１"
-    text: "きょうのできごと。"
-  }) {
-    id
-  }
-}
-
-# response
-{
-  "data": {
-    "createWhtText": {
-      "id": "9abd8293-dc5c-493d-85f2-e81fb86efd07"
-    }
-  }
-}
-*/
 func (r *mutationResolver) CreateWhtText(ctx context.Context, content model.WhtTextInput) (*model.MutationResponse, error) {
 	// FIXME:
 	fmt.Println("CreateWhtText")
@@ -51,57 +30,6 @@ func (r *mutationResolver) CreateWhtImage(ctx context.Context, content model.Wht
 	}, nil
 }
 
-/*
-# query
-query findWht {
- findWht {
-   id
-   recordDate
-   title
-   contentType
-   content {
-     name
-     __typename
-     ...	on TextContent {
-       text
-     }
-     ... on ImageContent {
-       path
-     }
-   }
- }
-}
-
-# response
-{
-  "data": {
-    "findWht": [
-      {
-        "id": "d1780890-b103-4edb-88a5-39b0b30ba2b1",
-        "recordDate": "2020-07-04T15:04:05Z09:00",
-        "title": "「今日こと」のタイトル",
-        "contentType": "Text",
-        "content": {
-          "name": "コンテンツの名前",
-          "__typename": "TextContent",
-          "text": "今日は、遠足に行きました。"
-        }
-      },
-      {
-        "id": "d817a009-5691-4552-bc9c-7611f3d68032",
-        "recordDate": "2020-07-04T20:16:22Z09:00",
-        "title": "「今日こと」のタイトル",
-        "contentType": "Image",
-        "content": {
-          "name": "コンテンツの名前",
-          "__typename": "ImageContent",
-          "path": "https://~~~~/01.png"
-        }
-      }
-    ]
-  }
-}
-*/
 func (r *queryResolver) FindWht(ctx context.Context, condition *model.WhtConditionInput) ([]*model.Wht, error) {
 	// FIXME:
 	fmt.Println("FindWht")

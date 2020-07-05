@@ -308,7 +308,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 }
 
 var sources = []*ast.Source{
-	{Name: "../schema/schema.graphqls", Input: `# GraphQL schema example
+	&ast.Source{Name: "../schema/schema.graphqls", Input: `# GraphQL schema example
 #
 # https://gqlgen.com/getting-started/
 
@@ -339,7 +339,7 @@ type NoopPayload {
 
 scalar Date
 `, BuiltIn: false},
-	{Name: "../schema/wht.graphqls", Input: `
+	&ast.Source{Name: "../schema/wht.graphqls", Input: `
 extend type Query {
     "「今日こと」"
     findWht(condition: WhtConditionInput): [Wht!]!
