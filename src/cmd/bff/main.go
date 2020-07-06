@@ -38,12 +38,14 @@ func execMain() exitCode {
 		app, err = build(ctx, cfg)
 	}
 	if err != nil {
-		log.Println(err)
+		log.Printf("%+v", err)
 		return abnormalEnd
 	}
 	defer func() {
 		if app != nil {
-			app.Shutdown()
+			if err := app.Shutdown(); err != nil {
+				log.Printf("%+v", err)
+			}
 		}
 	}()
 
@@ -52,23 +54,15 @@ func execMain() exitCode {
 		q := make(chan os.Signal)
 		signal.Notify(q, os.Interrupt, os.Kill, syscall.SIGTERM)
 		<-q
-		app.Shutdown()
+		if err := app.Shutdown(); err != nil {
+			log.Printf("%+v", err)
+		}
 		os.Exit(abnormalEnd)
 	}()
 
 	if err := app.Start(); err != nil {
-		log.Println(err)
+		log.Printf("%+v", err)
 		return abnormalEnd
 	}
 	return normalEnd
-
-	//srv := handler.NewDefaultServer(generated.NewExecutableSchema(generated.Config{Resolvers: &graph.Resolver{}}))
-	//
-	//http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	//http.Handle("/query", srv)
-	//
-	//port := cfg.GetWebSetting().WebPort
-	//log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	//
-	//log.Fatal(http.ListenAndServe(":"+port, nil))
 }

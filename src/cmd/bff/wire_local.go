@@ -27,7 +27,7 @@ func buildLocal(ctx context.Context, cfg system.Config) (wht.App, error) {
 		wht.NewApp,
 
 		// ユースケースやドメインロジック、アダプター
-		//domainSet,
+		domainSet,
 	)
 	return nil, nil
 }
