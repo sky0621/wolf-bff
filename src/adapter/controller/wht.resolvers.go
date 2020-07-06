@@ -5,19 +5,24 @@ package controller
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
 )
 
 func (r *mutationResolver) CreateWhtText(ctx context.Context, content graphqlmodel.WhtTextInput) (*graphqlmodel.MutationResponse, error) {
-	panic(fmt.Errorf("not implemented"))
+	r.wht.CreateWht(ctx)
+	// FIXME:
+	return nil, nil
 }
 
 func (r *mutationResolver) CreateWhtImage(ctx context.Context, content graphqlmodel.WhtImageInput) (*graphqlmodel.MutationResponse, error) {
-	panic(fmt.Errorf("not implemented"))
+	r.wht.CreateWht(ctx)
+	// FIXME:
+	return nil, nil
 }
 
 func (r *queryResolver) FindWht(ctx context.Context, condition *graphqlmodel.WhtConditionInput) ([]graphqlmodel.Wht, error) {
-	panic(fmt.Errorf("not implemented"))
+	r.wht.FindWht(ctx)
+	// FIXME:
+	return nil, nil
 }

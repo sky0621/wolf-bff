@@ -12,6 +12,6 @@ type Resolver struct {
 
 func NewResolver(
 	wht usecase.Wht,
-) *Resolver {
+) ResolverRoot {
 	return &Resolver{wht: wht}
 }

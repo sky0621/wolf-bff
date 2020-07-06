@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/volatiletech/sqlboiler/boil"
-
-	"golang.org/x/xerrors"
-
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
 	"github.com/sky0621/wolf-bff/src/system"
+	"github.com/volatiletech/sqlboiler/boil"
+	"golang.org/x/xerrors"
 )
 
 type RDB interface {

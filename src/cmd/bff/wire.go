@@ -15,10 +15,27 @@ import (
 	"github.com/sky0621/wolf-bff/src/system"
 )
 
-var domainSet = wire.NewSet(
+var commonSet = wire.NewSet(
+	/*
+	 * adapter/gateway
+	 */
 	gateway.NewWht,
+
+	/*
+	 * usecase
+	 */
 	usecase.NewWht,
+
+	/*
+	 * adapter/controller
+	 */
 	controller.NewResolver,
+
+	// Webサーバー
+	driver.NewWeb,
+
+	// アプリケーションそのもの
+	wht.NewApp,
 )
 
 // デプロイ先インフラで動かす際の設定
@@ -30,14 +47,8 @@ func build(ctx context.Context, cfg system.Config) (wht.App, error) {
 		// RDBコネクション
 		driver.NewRDB,
 
-		// ユースケースやドメインロジック、アダプター
-		domainSet,
-
-		// Webサーバー
-		driver.NewWeb,
-
-		// アプリケーションそのもの
-		wht.NewApp,
+		// ユースケースやドメインロジック、アダプター等
+		commonSet,
 	)
 	return nil, nil
 }

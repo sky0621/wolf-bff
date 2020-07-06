@@ -7,9 +7,13 @@ package main
 
 import (
 	"context"
+	"github.com/google/wire"
 	"github.com/sky0621/wolf-bff/src"
+	"github.com/sky0621/wolf-bff/src/adapter/controller"
+	"github.com/sky0621/wolf-bff/src/adapter/gateway"
 	"github.com/sky0621/wolf-bff/src/driver"
 	"github.com/sky0621/wolf-bff/src/system"
+	"github.com/sky0621/wolf-bff/src/usecase"
 )
 
 // Injectors from wire.go:
@@ -20,7 +24,10 @@ func build(ctx context.Context, cfg system.Config) (wht.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	web := driver.NewWeb(cfg, logger)
+	domainWht := gateway.NewWht(logger, rdb)
+	usecaseWht := usecase.NewWht(logger, domainWht)
+	resolverRoot := controller.NewResolver(usecaseWht)
+	web := driver.NewWeb(cfg, logger, resolverRoot)
 	app := wht.NewApp(cfg, logger, rdb, web)
 	return app, nil
 }
@@ -33,7 +40,14 @@ func buildLocal(ctx context.Context, cfg system.Config) (wht.App, error) {
 	if err != nil {
 		return nil, err
 	}
-	web := driver.NewWeb(cfg, logger)
+	domainWht := gateway.NewWht(logger, rdb)
+	usecaseWht := usecase.NewWht(logger, domainWht)
+	resolverRoot := controller.NewResolver(usecaseWht)
+	web := driver.NewWeb(cfg, logger, resolverRoot)
 	app := wht.NewApp(cfg, logger, rdb, web)
 	return app, nil
 }
+
+// wire.go:
+
+var commonSet = wire.NewSet(gateway.NewWht, usecase.NewWht, controller.NewResolver, driver.NewWeb, wht.NewApp)

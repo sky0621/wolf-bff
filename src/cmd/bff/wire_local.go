@@ -20,14 +20,8 @@ func buildLocal(ctx context.Context, cfg system.Config) (wht.App, error) {
 		// RDBコネクション
 		driver.NewRDB,
 
-		// Webサーバー
-		driver.NewWeb,
-
-		// アプリケーションそのもの
-		wht.NewApp,
-
-		// ユースケースやドメインロジック、アダプター
-		domainSet,
+		// ユースケースやドメインロジック、アダプター等
+		commonSet,
 	)
 	return nil, nil
 }

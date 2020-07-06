@@ -4,14 +4,11 @@ import (
 	"net/http"
 
 	"github.com/99designs/gqlgen/graphql/handler"
-
-	"github.com/sky0621/wolf-bff/src/adapter/controller"
-
-	"golang.org/x/xerrors"
-
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
+	"github.com/sky0621/wolf-bff/src/adapter/controller"
 	"github.com/sky0621/wolf-bff/src/system"
+	"golang.org/x/xerrors"
 )
 
 type Web interface {
@@ -21,16 +18,17 @@ type Web interface {
 type web struct {
 	cfg system.Config
 	log system.Logger
-	r   *chi.Mux
+
+	r *chi.Mux
 }
 
-func NewWeb(cfg system.Config, log system.Logger, resolver controller.Resolver) Web {
+func NewWeb(cfg system.Config, log system.Logger, resolver controller.ResolverRoot) Web {
 	r := chi.NewRouter()
 
 	// FIXME: 本番はNG
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
 
-	r.Handle("/query", handler.NewDefaultServer(controller.NewExecutableSchema(controller.Config{Resolvers: &resolver})))
+	r.Handle("/query", handler.NewDefaultServer(controller.NewExecutableSchema(controller.Config{Resolvers: resolver})))
 
 	return &web{cfg: cfg, log: log, r: r}
 }
