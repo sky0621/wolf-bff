@@ -7,11 +7,11 @@ import "github.com/sky0621/wolf-bff/src/usecase"
 // It serves as dependency injection for your app, add any dependencies you require here.
 
 type Resolver struct {
-	wht usecase.Wht
+	wht usecase.WhtInputPort
 }
 
 func NewResolver(
-	wht usecase.Wht,
+	wht usecase.WhtInputPort,
 ) ResolverRoot {
 	return &Resolver{wht: wht}
 }

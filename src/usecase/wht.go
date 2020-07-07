@@ -7,29 +7,34 @@ import (
 	"github.com/sky0621/wolf-bff/src/system"
 )
 
-type Wht interface {
-	FindWht(ctx context.Context)
+type Wht struct {
+}
+
+type WhtInputPort interface {
+	FindWht(ctx context.Context) ([]*Wht, error)
 	CreateWht(ctx context.Context)
 }
 
-type wht struct {
-	log system.Logger
-
+type whtInteractor struct {
+	log      system.Logger
 	whtLogic domain.Wht
 }
 
-func NewWht(log system.Logger, whtLogic domain.Wht) Wht {
-	return &wht{log: log, whtLogic: whtLogic}
+func NewWht(log system.Logger, whtLogic domain.Wht) WhtInputPort {
+	return &whtInteractor{log: log, whtLogic: whtLogic}
 }
 
-func (w *wht) FindWht(ctx context.Context) {
+func (w *whtInteractor) FindWht(ctx context.Context) ([]*Wht, error) {
 	l := w.log.WithRequestContext(ctx)
-	l.Info().Msg("usecase.Wht.FindWht__START")
+	l.Info().Msg("usecase.WhtInputPort.FindWht__START")
 	w.whtLogic.FindWht(ctx)
 }
 
-func (w *wht) CreateWht(ctx context.Context) {
+func (w *whtInteractor) CreateWht(ctx context.Context) {
 	l := w.log.WithRequestContext(ctx)
-	l.Info().Msg("usecase.Wht.CreateWht__START")
+	l.Info().Msg("usecase.WhtInputPort.CreateWht__START")
 	w.whtLogic.CreateWht(ctx)
+}
+
+type WhtOutputPort interface {
 }
