@@ -1,6 +1,6 @@
 # wolf-bff
 ## 概要
-「今日こと」システム(hodie)のBFF
+「今日こと(What happened today)」システム(hodie)のBFF
 
 ## 使用ライブラリバージョン
 ### go

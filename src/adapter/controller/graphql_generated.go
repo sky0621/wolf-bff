@@ -38,6 +38,7 @@ type Config struct {
 type ResolverRoot interface {
 	Mutation() MutationResolver
 	Query() QueryResolver
+	Wht() WhtResolver
 }
 
 type DirectiveRoot struct {
@@ -45,8 +46,16 @@ type DirectiveRoot struct {
 
 type ComplexityRoot struct {
 	ImageContent struct {
-		Name func(childComplexity int) int
-		Path func(childComplexity int) int
+		ContentType func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Path        func(childComplexity int) int
+	}
+
+	MovieContent struct {
+		ContentType func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
 	}
 
 	Mutation struct {
@@ -63,22 +72,35 @@ type ComplexityRoot struct {
 		ClientMutationID func(childComplexity int) int
 	}
 
+	OtherContent struct {
+		ContentType func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+	}
+
 	Query struct {
 		FindWht func(childComplexity int, condition *graphqlmodel.WhtConditionInput) int
 		Node    func(childComplexity int, id string) int
 	}
 
 	TextContent struct {
-		Name func(childComplexity int) int
-		Text func(childComplexity int) int
+		ContentType func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Text        func(childComplexity int) int
+	}
+
+	VoiceContent struct {
+		ContentType func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Name        func(childComplexity int) int
 	}
 
 	Wht struct {
-		Content     func(childComplexity int) int
-		ContentType func(childComplexity int) int
-		ID          func(childComplexity int) int
-		RecordDate  func(childComplexity int) int
-		Title       func(childComplexity int) int
+		Contents   func(childComplexity int) int
+		ID         func(childComplexity int) int
+		RecordDate func(childComplexity int) int
+		Title      func(childComplexity int) int
 	}
 }
 
@@ -90,6 +112,9 @@ type MutationResolver interface {
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (graphqlmodel.Node, error)
 	FindWht(ctx context.Context, condition *graphqlmodel.WhtConditionInput) ([]graphqlmodel.Wht, error)
+}
+type WhtResolver interface {
+	Contents(ctx context.Context, obj *graphqlmodel.Wht) ([]graphqlmodel.Content, error)
 }
 
 type executableSchema struct {
@@ -107,6 +132,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
+	case "ImageContent.contentType":
+		if e.complexity.ImageContent.ContentType == nil {
+			break
+		}
+
+		return e.complexity.ImageContent.ContentType(childComplexity), true
+
+	case "ImageContent.id":
+		if e.complexity.ImageContent.ID == nil {
+			break
+		}
+
+		return e.complexity.ImageContent.ID(childComplexity), true
+
 	case "ImageContent.name":
 		if e.complexity.ImageContent.Name == nil {
 			break
@@ -120,6 +159,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ImageContent.Path(childComplexity), true
+
+	case "MovieContent.contentType":
+		if e.complexity.MovieContent.ContentType == nil {
+			break
+		}
+
+		return e.complexity.MovieContent.ContentType(childComplexity), true
+
+	case "MovieContent.id":
+		if e.complexity.MovieContent.ID == nil {
+			break
+		}
+
+		return e.complexity.MovieContent.ID(childComplexity), true
+
+	case "MovieContent.name":
+		if e.complexity.MovieContent.Name == nil {
+			break
+		}
+
+		return e.complexity.MovieContent.Name(childComplexity), true
 
 	case "Mutation.createWhtImage":
 		if e.complexity.Mutation.CreateWhtImage == nil {
@@ -171,6 +231,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.NoopPayload.ClientMutationID(childComplexity), true
 
+	case "OtherContent.contentType":
+		if e.complexity.OtherContent.ContentType == nil {
+			break
+		}
+
+		return e.complexity.OtherContent.ContentType(childComplexity), true
+
+	case "OtherContent.id":
+		if e.complexity.OtherContent.ID == nil {
+			break
+		}
+
+		return e.complexity.OtherContent.ID(childComplexity), true
+
+	case "OtherContent.name":
+		if e.complexity.OtherContent.Name == nil {
+			break
+		}
+
+		return e.complexity.OtherContent.Name(childComplexity), true
+
 	case "Query.findWht":
 		if e.complexity.Query.FindWht == nil {
 			break
@@ -195,6 +276,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Node(childComplexity, args["id"].(string)), true
 
+	case "TextContent.contentType":
+		if e.complexity.TextContent.ContentType == nil {
+			break
+		}
+
+		return e.complexity.TextContent.ContentType(childComplexity), true
+
+	case "TextContent.id":
+		if e.complexity.TextContent.ID == nil {
+			break
+		}
+
+		return e.complexity.TextContent.ID(childComplexity), true
+
 	case "TextContent.name":
 		if e.complexity.TextContent.Name == nil {
 			break
@@ -209,19 +304,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.TextContent.Text(childComplexity), true
 
-	case "Wht.content":
-		if e.complexity.Wht.Content == nil {
+	case "VoiceContent.contentType":
+		if e.complexity.VoiceContent.ContentType == nil {
 			break
 		}
 
-		return e.complexity.Wht.Content(childComplexity), true
+		return e.complexity.VoiceContent.ContentType(childComplexity), true
 
-	case "Wht.contentType":
-		if e.complexity.Wht.ContentType == nil {
+	case "VoiceContent.id":
+		if e.complexity.VoiceContent.ID == nil {
 			break
 		}
 
-		return e.complexity.Wht.ContentType(childComplexity), true
+		return e.complexity.VoiceContent.ID(childComplexity), true
+
+	case "VoiceContent.name":
+		if e.complexity.VoiceContent.Name == nil {
+			break
+		}
+
+		return e.complexity.VoiceContent.Name(childComplexity), true
+
+	case "Wht.contents":
+		if e.complexity.Wht.Contents == nil {
+			break
+		}
+
+		return e.complexity.Wht.Contents(childComplexity), true
 
 	case "Wht.id":
 		if e.complexity.Wht.ID == nil {
@@ -341,7 +450,7 @@ scalar Date
 `, BuiltIn: false},
 	&ast.Source{Name: "../schema/wht.graphqls", Input: `
 extend type Query {
-    "「今日こと」"
+    "「今日こと」を取得"
     findWht(condition: WhtConditionInput): [Wht!]!
 }
 
@@ -364,10 +473,8 @@ type Wht implements Node{
     recordDate: Date!
     "タイトル"
     title: String
-    "コンテンツタイプ"
-    contentType: ContentType!
-    "コンテンツ"
-    content: Content
+    "コンテンツリスト"
+    contents: [Content!]!
 }
 
 "コンテンツタイプ"
@@ -376,30 +483,70 @@ enum ContentType {
     Text
     "画像"
     Image
+    "音声"
+    Voice
+    "動画"
+    Movie
     "その他"
     Other
 }
 
 "コンテンツ"
 interface Content {
+    id: ID!
     "コンテンツ名"
     name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
 }
 
 "テキストコンテンツ"
 type TextContent implements Content {
+    id: ID!
     "コンテンツ名"
     name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
     "テキスト"
     text: String!
 }
 
 "画像コンテンツ"
 type ImageContent implements Content {
+    id: ID!
     "コンテンツ名"
     name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
     "画像パス"
     path: String!
+}
+
+"音声コンテンツ"
+type VoiceContent implements Content {
+    id: ID!
+    "コンテンツ名"
+    name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
+}
+
+"動画コンテンツ"
+type MovieContent implements Content {
+    id: ID!
+    "コンテンツ名"
+    name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
+}
+
+"その他コンテンツ"
+type OtherContent implements Content {
+    id: ID!
+    "コンテンツ名"
+    name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
 }
 
 # -------------------------------------------------------------------
@@ -430,6 +577,30 @@ input WhtImageInput {
     name: String
     "画像パス"
     path: String!
+}
+
+"「今日こと」音声インプット"
+input WhtVoiceInput {
+    "タイトル"
+    title: String
+    "コンテンツ名"
+    name: String
+}
+
+"「今日こと」動画インプット"
+input WhtMovieInput {
+    "タイトル"
+    title: String
+    "コンテンツ名"
+    name: String
+}
+
+"「今日こと」その他インプット"
+input WhtOtherInput {
+    "タイトル"
+    title: String
+    "コンテンツ名"
+    name: String
 }
 `, BuiltIn: false},
 }
@@ -559,6 +730,40 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
+func (ec *executionContext) _ImageContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ImageContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _ImageContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -588,6 +793,40 @@ func (ec *executionContext) _ImageContent_name(ctx context.Context, field graphq
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _ImageContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "ImageContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(graphqlmodel.ContentType)
+	fc.Result = res
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _ImageContent_path(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
@@ -622,6 +861,105 @@ func (ec *executionContext) _ImageContent_path(ctx context.Context, field graphq
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MovieContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.MovieContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MovieContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MovieContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.MovieContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MovieContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _MovieContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.MovieContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "MovieContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(graphqlmodel.ContentType)
+	fc.Result = res
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_noop(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -800,6 +1138,105 @@ func (ec *executionContext) _NoopPayload_clientMutationId(ctx context.Context, f
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _OtherContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.OtherContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "OtherContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _OtherContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.OtherContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "OtherContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _OtherContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.OtherContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "OtherContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(graphqlmodel.ContentType)
+	fc.Result = res
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _Query_node(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -948,6 +1385,40 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
+func (ec *executionContext) _TextContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "TextContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
 func (ec *executionContext) _TextContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -977,6 +1448,40 @@ func (ec *executionContext) _TextContent_name(ctx context.Context, field graphql
 	res := resTmp.(*string)
 	fc.Result = res
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _TextContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "TextContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(graphqlmodel.ContentType)
+	fc.Result = res
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _TextContent_text(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
@@ -1011,6 +1516,105 @@ func (ec *executionContext) _TextContent_text(ctx context.Context, field graphql
 	res := resTmp.(string)
 	fc.Result = res
 	return ec.marshalNString2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VoiceContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.VoiceContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VoiceContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ID, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VoiceContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.VoiceContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VoiceContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Name, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) _VoiceContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.VoiceContent) (ret graphql.Marshaler) {
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	fc := &graphql.FieldContext{
+		Object:   "VoiceContent",
+		Field:    field,
+		Args:     nil,
+		IsMethod: false,
+	}
+
+	ctx = graphql.WithFieldContext(ctx, fc)
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ContentType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(graphqlmodel.ContentType)
+	fc.Result = res
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
@@ -1112,7 +1716,7 @@ func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.Collec
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_contents(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1123,13 +1727,13 @@ func (ec *executionContext) _Wht_contentType(ctx context.Context, field graphql.
 		Object:   "Wht",
 		Field:    field,
 		Args:     nil,
-		IsMethod: false,
+		IsMethod: true,
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ContentType, nil
+		return ec.resolvers.Wht().Contents(rctx, obj)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1141,40 +1745,9 @@ func (ec *executionContext) _Wht_contentType(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(graphqlmodel.ContentType)
+	res := resTmp.([]graphqlmodel.Content)
 	fc.Result = res
-	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Wht_content(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Wht",
-		Field:    field,
-		Args:     nil,
-		IsMethod: false,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Content, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(graphqlmodel.Content)
-	fc.Result = res
-	return ec.marshalOContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContent(ctx, field.Selections, res)
+	return ec.marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2298,6 +2871,54 @@ func (ec *executionContext) unmarshalInputWhtImageInput(ctx context.Context, obj
 	return it, nil
 }
 
+func (ec *executionContext) unmarshalInputWhtMovieInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtMovieInput, error) {
+	var it graphqlmodel.WhtMovieInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "title":
+			var err error
+			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputWhtOtherInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtOtherInput, error) {
+	var it graphqlmodel.WhtOtherInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "title":
+			var err error
+			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputWhtTextInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtTextInput, error) {
 	var it graphqlmodel.WhtTextInput
 	var asMap = obj.(map[string]interface{})
@@ -2319,6 +2940,30 @@ func (ec *executionContext) unmarshalInputWhtTextInput(ctx context.Context, obj 
 		case "text":
 			var err error
 			it.Text, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputWhtVoiceInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtVoiceInput, error) {
+	var it graphqlmodel.WhtVoiceInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "title":
+			var err error
+			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -2350,6 +2995,27 @@ func (ec *executionContext) _Content(ctx context.Context, sel ast.SelectionSet, 
 			return graphql.Null
 		}
 		return ec._ImageContent(ctx, sel, obj)
+	case graphqlmodel.VoiceContent:
+		return ec._VoiceContent(ctx, sel, &obj)
+	case *graphqlmodel.VoiceContent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._VoiceContent(ctx, sel, obj)
+	case graphqlmodel.MovieContent:
+		return ec._MovieContent(ctx, sel, &obj)
+	case *graphqlmodel.MovieContent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._MovieContent(ctx, sel, obj)
+	case graphqlmodel.OtherContent:
+		return ec._OtherContent(ctx, sel, &obj)
+	case *graphqlmodel.OtherContent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._OtherContent(ctx, sel, obj)
 	default:
 		panic(fmt.Errorf("unexpected type %T", obj))
 	}
@@ -2386,10 +3052,54 @@ func (ec *executionContext) _ImageContent(ctx context.Context, sel ast.Selection
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("ImageContent")
+		case "id":
+			out.Values[i] = ec._ImageContent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._ImageContent_name(ctx, field, obj)
+		case "contentType":
+			out.Values[i] = ec._ImageContent_contentType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "path":
 			out.Values[i] = ec._ImageContent_path(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var movieContentImplementors = []string{"MovieContent", "Content"}
+
+func (ec *executionContext) _MovieContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.MovieContent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, movieContentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("MovieContent")
+		case "id":
+			out.Values[i] = ec._MovieContent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._MovieContent_name(ctx, field, obj)
+		case "contentType":
+			out.Values[i] = ec._MovieContent_contentType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2484,6 +3194,40 @@ func (ec *executionContext) _NoopPayload(ctx context.Context, sel ast.SelectionS
 	return out
 }
 
+var otherContentImplementors = []string{"OtherContent", "Content"}
+
+func (ec *executionContext) _OtherContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.OtherContent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, otherContentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OtherContent")
+		case "id":
+			out.Values[i] = ec._OtherContent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._OtherContent_name(ctx, field, obj)
+		case "contentType":
+			out.Values[i] = ec._OtherContent_contentType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
 var queryImplementors = []string{"Query"}
 
 func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -2550,10 +3294,54 @@ func (ec *executionContext) _TextContent(ctx context.Context, sel ast.SelectionS
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("TextContent")
+		case "id":
+			out.Values[i] = ec._TextContent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "name":
 			out.Values[i] = ec._TextContent_name(ctx, field, obj)
+		case "contentType":
+			out.Values[i] = ec._TextContent_contentType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
 		case "text":
 			out.Values[i] = ec._TextContent_text(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch()
+	if invalids > 0 {
+		return graphql.Null
+	}
+	return out
+}
+
+var voiceContentImplementors = []string{"VoiceContent", "Content"}
+
+func (ec *executionContext) _VoiceContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.VoiceContent) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, voiceContentImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	var invalids uint32
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("VoiceContent")
+		case "id":
+			out.Values[i] = ec._VoiceContent_id(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				invalids++
+			}
+		case "name":
+			out.Values[i] = ec._VoiceContent_name(ctx, field, obj)
+		case "contentType":
+			out.Values[i] = ec._VoiceContent_contentType(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -2582,22 +3370,29 @@ func (ec *executionContext) _Wht(ctx context.Context, sel ast.SelectionSet, obj 
 		case "id":
 			out.Values[i] = ec._Wht_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "recordDate":
 			out.Values[i] = ec._Wht_recordDate(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
-				invalids++
+				atomic.AddUint32(&invalids, 1)
 			}
 		case "title":
 			out.Values[i] = ec._Wht_title(ctx, field, obj)
-		case "contentType":
-			out.Values[i] = ec._Wht_contentType(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				invalids++
-			}
-		case "content":
-			out.Values[i] = ec._Wht_content(ctx, field, obj)
+		case "contents":
+			field := field
+			out.Concurrently(i, func() (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Wht_contents(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			})
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -2866,6 +3661,53 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContent(ctx context.Context, sel ast.SelectionSet, v graphqlmodel.Content) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	return ec._Content(ctx, sel, v)
+}
+
+func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentᚄ(ctx context.Context, sel ast.SelectionSet, v []graphqlmodel.Content) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	var wg sync.WaitGroup
+	isLen1 := len(v) == 1
+	if !isLen1 {
+		wg.Add(len(v))
+	}
+	for i := range v {
+		i := i
+		fc := &graphql.FieldContext{
+			Index:  &i,
+			Result: &v[i],
+		}
+		ctx := graphql.WithFieldContext(ctx, fc)
+		f := func(i int) {
+			defer func() {
+				if r := recover(); r != nil {
+					ec.Error(ctx, ec.Recover(ctx, r))
+					ret = nil
+				}
+			}()
+			if !isLen1 {
+				defer wg.Done()
+			}
+			ret[i] = ec.marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContent(ctx, sel, v[i])
+		}
+		if isLen1 {
+			f(i)
+		} else {
+			go f(i)
+		}
+
+	}
+	wg.Wait()
+	return ret
 }
 
 func (ec *executionContext) unmarshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx context.Context, v interface{}) (graphqlmodel.ContentType, error) {
@@ -3215,13 +4057,6 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
-}
-
-func (ec *executionContext) marshalOContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContent(ctx context.Context, sel ast.SelectionSet, v graphqlmodel.Content) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._Content(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {

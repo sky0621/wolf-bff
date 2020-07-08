@@ -35,7 +35,7 @@ require (
 	golang.org/x/mod v0.3.0 // indirect
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200702044944-0cc1aa72b347 // indirect
+	golang.org/x/tools v0.0.0-20200708003708-134513de8882 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	google.golang.org/appengine v1.6.6 // indirect
 	gopkg.in/ini.v1 v1.57.0 // indirect

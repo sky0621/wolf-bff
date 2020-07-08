@@ -5,6 +5,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
 )
@@ -26,3 +27,13 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *graphqlmodel.Wht
 	// FIXME:
 	return nil, nil
 }
+
+func (r *whtResolver) Contents(ctx context.Context, obj *graphqlmodel.Wht) ([]graphqlmodel.Content, error) {
+	// FIXME:
+	panic(fmt.Errorf("not implemented"))
+}
+
+// Wht returns WhtResolver implementation.
+func (r *Resolver) Wht() WhtResolver { return &whtResolver{r} }
+
+type whtResolver struct{ *Resolver }

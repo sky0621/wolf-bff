@@ -15,12 +15,16 @@ type WhtInputPort interface {
 	CreateWht(ctx context.Context)
 }
 
-type whtInteractor struct {
-	log      system.Logger
-	whtLogic domain.Wht
+type WhtOutputPort interface {
+	Output()
 }
 
-func NewWht(log system.Logger, whtLogic domain.Wht) WhtInputPort {
+type whtInteractor struct {
+	log      system.Logger
+	whtLogic domain.WhtLogic
+}
+
+func NewWht(log system.Logger, whtLogic domain.WhtLogic) WhtInputPort {
 	return &whtInteractor{log: log, whtLogic: whtLogic}
 }
 
@@ -34,7 +38,4 @@ func (w *whtInteractor) CreateWht(ctx context.Context) {
 	l := w.log.WithRequestContext(ctx)
 	l.Info().Msg("usecase.WhtInputPort.CreateWht__START")
 	w.whtLogic.CreateWht(ctx)
-}
-
-type WhtOutputPort interface {
 }

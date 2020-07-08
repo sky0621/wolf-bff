@@ -19,13 +19,27 @@ type Node interface {
 
 // 画像コンテンツ
 type ImageContent struct {
+	ID string `json:"id"`
 	// コンテンツ名
 	Name *string `json:"name"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
 	// 画像パス
 	Path string `json:"path"`
 }
 
 func (ImageContent) IsContent() {}
+
+// 動画コンテンツ
+type MovieContent struct {
+	ID string `json:"id"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
+}
+
+func (MovieContent) IsContent() {}
 
 type MutationResponse struct {
 	ID *string `json:"id"`
@@ -39,31 +53,40 @@ type NoopPayload struct {
 	ClientMutationID *string `json:"clientMutationId"`
 }
 
-// テキストコンテンツ
-type TextContent struct {
+// その他コンテンツ
+type OtherContent struct {
+	ID string `json:"id"`
 	// コンテンツ名
 	Name *string `json:"name"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
+}
+
+func (OtherContent) IsContent() {}
+
+// テキストコンテンツ
+type TextContent struct {
+	ID string `json:"id"`
+	// コンテンツ名
+	Name *string `json:"name"`
+	// コンテンツタイプ
+	ContentType ContentType `json:"contentType"`
 	// テキスト
 	Text string `json:"text"`
 }
 
 func (TextContent) IsContent() {}
 
-// 今日こと
-type Wht struct {
-	// ID
+// 音声コンテンツ
+type VoiceContent struct {
 	ID string `json:"id"`
-	// 記録日
-	RecordDate string `json:"recordDate"`
-	// タイトル
-	Title *string `json:"title"`
+	// コンテンツ名
+	Name *string `json:"name"`
 	// コンテンツタイプ
 	ContentType ContentType `json:"contentType"`
-	// コンテンツ
-	Content Content `json:"content"`
 }
 
-func (Wht) IsNode() {}
+func (VoiceContent) IsContent() {}
 
 // 「今日こと」検索条件
 type WhtConditionInput struct {
@@ -81,6 +104,22 @@ type WhtImageInput struct {
 	Path string `json:"path"`
 }
 
+// 「今日こと」動画インプット
+type WhtMovieInput struct {
+	// タイトル
+	Title *string `json:"title"`
+	// コンテンツ名
+	Name *string `json:"name"`
+}
+
+// 「今日こと」その他インプット
+type WhtOtherInput struct {
+	// タイトル
+	Title *string `json:"title"`
+	// コンテンツ名
+	Name *string `json:"name"`
+}
+
 // 「今日こと」テキストインプット
 type WhtTextInput struct {
 	// タイトル
@@ -91,6 +130,14 @@ type WhtTextInput struct {
 	Text string `json:"text"`
 }
 
+// 「今日こと」音声インプット
+type WhtVoiceInput struct {
+	// タイトル
+	Title *string `json:"title"`
+	// コンテンツ名
+	Name *string `json:"name"`
+}
+
 // コンテンツタイプ
 type ContentType string
 
@@ -99,6 +146,10 @@ const (
 	ContentTypeText ContentType = "Text"
 	// 画像
 	ContentTypeImage ContentType = "Image"
+	// 音声
+	ContentTypeVoice ContentType = "Voice"
+	// 動画
+	ContentTypeMovie ContentType = "Movie"
 	// その他
 	ContentTypeOther ContentType = "Other"
 )
@@ -106,12 +157,14 @@ const (
 var AllContentType = []ContentType{
 	ContentTypeText,
 	ContentTypeImage,
+	ContentTypeVoice,
+	ContentTypeMovie,
 	ContentTypeOther,
 }
 
 func (e ContentType) IsValid() bool {
 	switch e {
-	case ContentTypeText, ContentTypeImage, ContentTypeOther:
+	case ContentTypeText, ContentTypeImage, ContentTypeVoice, ContentTypeMovie, ContentTypeOther:
 		return true
 	}
 	return false

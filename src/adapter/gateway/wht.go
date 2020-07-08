@@ -8,7 +8,7 @@ import (
 	"github.com/sky0621/wolf-bff/src/system"
 )
 
-func NewWht(log system.Logger, db driver.RDB) domain.Wht {
+func NewWht(log system.Logger, db driver.RDB) domain.WhtLogic {
 	return &wht{log: log, db: db}
 }
 
