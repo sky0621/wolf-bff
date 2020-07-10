@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 
-	wht "github.com/sky0621/wolf-bff/src"
-	"github.com/sky0621/wolf-bff/src/system"
+	"github.com/go-chi/chi"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
 )
 
 type exitCode int
@@ -23,14 +25,9 @@ func main() {
 }
 
 func execMain() exitCode {
-	cfg := system.NewConfig()
-	if cfg == nil {
-		log.Println("config is nil")
-		return abnormalEnd
-	}
-
+	cfg := newConfig()
 	ctx := context.Background()
-	var app wht.App
+	var app app
 	var err error
 	if cfg.IsLocal() {
 		app, err = buildLocal(ctx, cfg)
@@ -42,10 +39,8 @@ func execMain() exitCode {
 		return abnormalEnd
 	}
 	defer func() {
-		if app != nil {
-			if err := app.Shutdown(); err != nil {
-				log.Printf("%+v", err)
-			}
+		if err := app.db.Close(); err != nil {
+			log.Printf("%+v", err)
 		}
 	}()
 
@@ -54,15 +49,27 @@ func execMain() exitCode {
 		q := make(chan os.Signal)
 		signal.Notify(q, os.Interrupt, os.Kill, syscall.SIGTERM)
 		<-q
-		if err := app.Shutdown(); err != nil {
+		if err := app.db.Close(); err != nil {
 			log.Printf("%+v", err)
 		}
 		os.Exit(abnormalEnd)
 	}()
 
-	if err := app.Start(); err != nil {
+	if err := http.ListenAndServe(":"+cfg.WebPort, app.r); err != nil {
 		log.Printf("%+v", err)
 		return abnormalEnd
 	}
 	return normalEnd
+}
+
+type app struct {
+	db *sqlx.DB
+	r  *chi.Mux
+}
+
+func newApp(db *sqlx.DB, r *chi.Mux) app {
+	return app{
+		db: db,
+		r:  r,
+	}
 }

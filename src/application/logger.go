@@ -1,4 +1,4 @@
-package system
+package application
 
 import (
 	"context"
@@ -15,7 +15,7 @@ type logger struct {
 	zLog zerolog.Logger
 }
 
-func NewLogger(cfg Config) Logger {
+func NewLogger() Logger {
 	l := zerolog.New(os.Stdout)
 	return &logger{zLog: l}
 }

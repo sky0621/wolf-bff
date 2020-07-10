@@ -1,14 +1,12 @@
 
+extend type Mutation {
+    "「今日こと」を登録"
+    createWht(wht: WhtInput!): MutationResponse
+}
+
 extend type Query {
     "「今日こと」を取得"
     findWht(condition: WhtConditionInput): [Wht!]!
-}
-
-extend type Mutation {
-    "「今日こと」テキストコンテンツを登録"
-    createWhtText(content: WhtTextInput!): MutationResponse
-    "「今日こと」画像コンテンツを登録"
-    createWhtImage(content: WhtImageInput!): MutationResponse
 }
 
 # -------------------------------------------------------------------
@@ -103,14 +101,24 @@ type OtherContent implements Content {
 # input
 # -------------------------------------------------------------------
 
-"「今日こと」検索条件"
-input WhtConditionInput {
-    "ID"
-    id: ID
+"今日ことインプット"
+input WhtInput {
+    "タイトル"
+    title: String
+    "コンテンツリスト"
+    contents: [ContentInput!]!
 }
 
-"「今日こと」テキストインプット"
-input WhtTextInput {
+"コンテンツインプット"
+input ContentInput {
+    "コンテンツ名"
+    name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
+}
+
+"テキストコンテンツインプット"
+input WhtTextContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
@@ -119,8 +127,8 @@ input WhtTextInput {
     text: String!
 }
 
-"「今日こと」画像インプット"
-input WhtImageInput {
+"画像コンテンツインプット"
+input WhtImageContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
@@ -129,26 +137,32 @@ input WhtImageInput {
     path: String!
 }
 
-"「今日こと」音声インプット"
-input WhtVoiceInput {
+"音声コンテンツインプット"
+input WhtVoiceContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
     name: String
 }
 
-"「今日こと」動画インプット"
-input WhtMovieInput {
+"動画コンテンツインプット"
+input WhtMovieContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
     name: String
 }
 
-"「今日こと」その他インプット"
-input WhtOtherInput {
+"その他コンテンツインプット"
+input WhtOtherContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
     name: String
+}
+
+"「今日こと」検索条件"
+input WhtConditionInput {
+    "ID"
+    id: ID
 }

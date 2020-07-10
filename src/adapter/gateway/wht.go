@@ -3,33 +3,26 @@ package gateway
 import (
 	"context"
 
-	"github.com/sky0621/wolf-bff/src/domain"
-	"github.com/sky0621/wolf-bff/src/driver"
-	"github.com/sky0621/wolf-bff/src/system"
+	"github.com/sky0621/wolf-bff/src/application"
+
+	"github.com/jmoiron/sqlx"
+	"github.com/sky0621/wolf-bff/src/application/model"
 )
 
-func NewWht(log system.Logger, db driver.RDB) domain.WhtLogic {
-	return &wht{log: log, db: db}
+func NewWhtRepository(db *sqlx.DB) application.WhtRepository {
+	return &whtRepository{db: db}
 }
 
-type wht struct {
-	log system.Logger
-
-	db driver.RDB
+type whtRepository struct {
+	db *sqlx.DB
 }
 
-func (w *wht) FindWht(ctx context.Context) {
-	l := w.log.WithRequestContext(ctx)
-	l.Info().Msg("gateway.wht.FindWht__START")
-
+func (r *whtRepository) CreateWht(ctx context.Context, in model.WhtInput) (string, error) {
 	// FIXME:
-}
-
-func (w *wht) CreateWht(ctx context.Context) {
-	l := w.log.WithRequestContext(ctx)
-	l.Info().Msg("gateway.wht.CreateWht__START")
-
-	// FIXME:
-	//in := mdl.WHT{}
-	//in.Insert()
+	//mdl := sqlboilermodel.WHT{
+	//	Recorddate: time.Now(),
+	//	//Title:      null.StringFromPtr(in.Title),
+	//}
+	//mdl.Insert(ctx, r.db, boil.Infer())
+	return "", nil
 }

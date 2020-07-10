@@ -8,27 +8,28 @@ import (
 	"fmt"
 
 	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
+	"github.com/sky0621/wolf-bff/src/adapter/gateway"
+	"github.com/sky0621/wolf-bff/src/application"
+	"github.com/sky0621/wolf-bff/src/application/model"
+	"golang.org/x/xerrors"
 )
 
-func (r *mutationResolver) CreateWhtText(ctx context.Context, content graphqlmodel.WhtTextInput) (*graphqlmodel.MutationResponse, error) {
-	r.wht.CreateWht(ctx)
-	// FIXME:
-	return nil, nil
+func (r *mutationResolver) CreateWht(ctx context.Context, wht model.WhtInput) (*graphqlmodel.MutationResponse, error) {
+	id, err := application.NewWht(gateway.NewWhtRepository(r.db)).CreateWht(ctx, wht)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to CreateWht: %w", err)
+	}
+	return &graphqlmodel.MutationResponse{
+		ID: &id,
+	}, nil
 }
 
-func (r *mutationResolver) CreateWhtImage(ctx context.Context, content graphqlmodel.WhtImageInput) (*graphqlmodel.MutationResponse, error) {
-	r.wht.CreateWht(ctx)
+func (r *queryResolver) FindWht(ctx context.Context, condition *model.WhtConditionInput) ([]model.Wht, error) {
 	// FIXME:
-	return nil, nil
+	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) FindWht(ctx context.Context, condition *graphqlmodel.WhtConditionInput) ([]graphqlmodel.Wht, error) {
-	r.wht.FindWht(ctx)
-	// FIXME:
-	return nil, nil
-}
-
-func (r *whtResolver) Contents(ctx context.Context, obj *graphqlmodel.Wht) ([]graphqlmodel.Content, error) {
+func (r *whtResolver) Contents(ctx context.Context, obj *model.Wht) ([]model.Content, error) {
 	// FIXME:
 	panic(fmt.Errorf("not implemented"))
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
 	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
+	"github.com/sky0621/wolf-bff/src/application/model"
 	gqlparser "github.com/vektah/gqlparser/v2"
 	"github.com/vektah/gqlparser/v2/ast"
 )
@@ -59,9 +60,8 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateWhtImage func(childComplexity int, content graphqlmodel.WhtImageInput) int
-		CreateWhtText  func(childComplexity int, content graphqlmodel.WhtTextInput) int
-		Noop           func(childComplexity int, input *graphqlmodel.NoopInput) int
+		CreateWht func(childComplexity int, wht model.WhtInput) int
+		Noop      func(childComplexity int, input *graphqlmodel.NoopInput) int
 	}
 
 	MutationResponse struct {
@@ -79,7 +79,7 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		FindWht func(childComplexity int, condition *graphqlmodel.WhtConditionInput) int
+		FindWht func(childComplexity int, condition *model.WhtConditionInput) int
 		Node    func(childComplexity int, id string) int
 	}
 
@@ -106,15 +106,14 @@ type ComplexityRoot struct {
 
 type MutationResolver interface {
 	Noop(ctx context.Context, input *graphqlmodel.NoopInput) (*graphqlmodel.NoopPayload, error)
-	CreateWhtText(ctx context.Context, content graphqlmodel.WhtTextInput) (*graphqlmodel.MutationResponse, error)
-	CreateWhtImage(ctx context.Context, content graphqlmodel.WhtImageInput) (*graphqlmodel.MutationResponse, error)
+	CreateWht(ctx context.Context, wht model.WhtInput) (*graphqlmodel.MutationResponse, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (graphqlmodel.Node, error)
-	FindWht(ctx context.Context, condition *graphqlmodel.WhtConditionInput) ([]graphqlmodel.Wht, error)
+	FindWht(ctx context.Context, condition *model.WhtConditionInput) ([]model.Wht, error)
 }
 type WhtResolver interface {
-	Contents(ctx context.Context, obj *graphqlmodel.Wht) ([]graphqlmodel.Content, error)
+	Contents(ctx context.Context, obj *model.Wht) ([]model.Content, error)
 }
 
 type executableSchema struct {
@@ -181,29 +180,17 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.MovieContent.Name(childComplexity), true
 
-	case "Mutation.createWhtImage":
-		if e.complexity.Mutation.CreateWhtImage == nil {
+	case "Mutation.createWht":
+		if e.complexity.Mutation.CreateWht == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_createWhtImage_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_createWht_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateWhtImage(childComplexity, args["content"].(graphqlmodel.WhtImageInput)), true
-
-	case "Mutation.createWhtText":
-		if e.complexity.Mutation.CreateWhtText == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_createWhtText_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CreateWhtText(childComplexity, args["content"].(graphqlmodel.WhtTextInput)), true
+		return e.complexity.Mutation.CreateWht(childComplexity, args["wht"].(model.WhtInput)), true
 
 	case "Mutation.noop":
 		if e.complexity.Mutation.Noop == nil {
@@ -262,7 +249,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Query.FindWht(childComplexity, args["condition"].(*graphqlmodel.WhtConditionInput)), true
+		return e.complexity.Query.FindWht(childComplexity, args["condition"].(*model.WhtConditionInput)), true
 
 	case "Query.node":
 		if e.complexity.Query.Node == nil {
@@ -449,16 +436,14 @@ type NoopPayload {
 scalar Date
 `, BuiltIn: false},
 	&ast.Source{Name: "../schema/wht.graphqls", Input: `
+extend type Mutation {
+    "「今日こと」を登録"
+    createWht(wht: WhtInput!): MutationResponse
+}
+
 extend type Query {
     "「今日こと」を取得"
     findWht(condition: WhtConditionInput): [Wht!]!
-}
-
-extend type Mutation {
-    "「今日こと」テキストコンテンツを登録"
-    createWhtText(content: WhtTextInput!): MutationResponse
-    "「今日こと」画像コンテンツを登録"
-    createWhtImage(content: WhtImageInput!): MutationResponse
 }
 
 # -------------------------------------------------------------------
@@ -553,14 +538,24 @@ type OtherContent implements Content {
 # input
 # -------------------------------------------------------------------
 
-"「今日こと」検索条件"
-input WhtConditionInput {
-    "ID"
-    id: ID
+"今日ことインプット"
+input WhtInput {
+    "タイトル"
+    title: String
+    "コンテンツリスト"
+    contents: [ContentInput!]!
 }
 
-"「今日こと」テキストインプット"
-input WhtTextInput {
+"コンテンツインプット"
+input ContentInput {
+    "コンテンツ名"
+    name: String
+    "コンテンツタイプ"
+    contentType: ContentType!
+}
+
+"テキストコンテンツインプット"
+input WhtTextContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
@@ -569,8 +564,8 @@ input WhtTextInput {
     text: String!
 }
 
-"「今日こと」画像インプット"
-input WhtImageInput {
+"画像コンテンツインプット"
+input WhtImageContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
@@ -579,28 +574,34 @@ input WhtImageInput {
     path: String!
 }
 
-"「今日こと」音声インプット"
-input WhtVoiceInput {
+"音声コンテンツインプット"
+input WhtVoiceContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
     name: String
 }
 
-"「今日こと」動画インプット"
-input WhtMovieInput {
+"動画コンテンツインプット"
+input WhtMovieContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
     name: String
 }
 
-"「今日こと」その他インプット"
-input WhtOtherInput {
+"その他コンテンツインプット"
+input WhtOtherContentInput {
     "タイトル"
     title: String
     "コンテンツ名"
     name: String
+}
+
+"「今日こと」検索条件"
+input WhtConditionInput {
+    "ID"
+    id: ID
 }
 `, BuiltIn: false},
 }
@@ -610,31 +611,17 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 
 // region    ***************************** args.gotpl *****************************
 
-func (ec *executionContext) field_Mutation_createWhtImage_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_createWht_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 graphqlmodel.WhtImageInput
-	if tmp, ok := rawArgs["content"]; ok {
-		arg0, err = ec.unmarshalNWhtImageInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtImageInput(ctx, tmp)
+	var arg0 model.WhtInput
+	if tmp, ok := rawArgs["wht"]; ok {
+		arg0, err = ec.unmarshalNWhtInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["content"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_createWhtText_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 graphqlmodel.WhtTextInput
-	if tmp, ok := rawArgs["content"]; ok {
-		arg0, err = ec.unmarshalNWhtTextInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtTextInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["content"] = arg0
+	args["wht"] = arg0
 	return args, nil
 }
 
@@ -669,9 +656,9 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 func (ec *executionContext) field_Query_findWht_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 *graphqlmodel.WhtConditionInput
+	var arg0 *model.WhtConditionInput
 	if tmp, ok := rawArgs["condition"]; ok {
-		arg0, err = ec.unmarshalOWhtConditionInput2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtConditionInput(ctx, tmp)
+		arg0, err = ec.unmarshalOWhtConditionInput2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtConditionInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -730,7 +717,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _ImageContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _ImageContent_id(ctx context.Context, field graphql.CollectedField, obj *model.ImageContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -764,7 +751,7 @@ func (ec *executionContext) _ImageContent_id(ctx context.Context, field graphql.
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ImageContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _ImageContent_name(ctx context.Context, field graphql.CollectedField, obj *model.ImageContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -795,7 +782,7 @@ func (ec *executionContext) _ImageContent_name(ctx context.Context, field graphq
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ImageContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _ImageContent_contentType(ctx context.Context, field graphql.CollectedField, obj *model.ImageContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -824,12 +811,12 @@ func (ec *executionContext) _ImageContent_contentType(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(graphqlmodel.ContentType)
+	res := resTmp.(model.ContentType)
 	fc.Result = res
-	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _ImageContent_path(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.ImageContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _ImageContent_path(ctx context.Context, field graphql.CollectedField, obj *model.ImageContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -863,7 +850,7 @@ func (ec *executionContext) _ImageContent_path(ctx context.Context, field graphq
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MovieContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.MovieContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _MovieContent_id(ctx context.Context, field graphql.CollectedField, obj *model.MovieContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -897,7 +884,7 @@ func (ec *executionContext) _MovieContent_id(ctx context.Context, field graphql.
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MovieContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.MovieContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _MovieContent_name(ctx context.Context, field graphql.CollectedField, obj *model.MovieContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -928,7 +915,7 @@ func (ec *executionContext) _MovieContent_name(ctx context.Context, field graphq
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _MovieContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.MovieContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _MovieContent_contentType(ctx context.Context, field graphql.CollectedField, obj *model.MovieContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -957,9 +944,9 @@ func (ec *executionContext) _MovieContent_contentType(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(graphqlmodel.ContentType)
+	res := resTmp.(model.ContentType)
 	fc.Result = res
-	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Mutation_noop(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1000,7 +987,7 @@ func (ec *executionContext) _Mutation_noop(ctx context.Context, field graphql.Co
 	return ec.marshalONoopPayload2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐNoopPayload(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Mutation_createWhtText(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Mutation_createWht(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1016,7 +1003,7 @@ func (ec *executionContext) _Mutation_createWhtText(ctx context.Context, field g
 
 	ctx = graphql.WithFieldContext(ctx, fc)
 	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createWhtText_args(ctx, rawArgs)
+	args, err := ec.field_Mutation_createWht_args(ctx, rawArgs)
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
@@ -1024,45 +1011,7 @@ func (ec *executionContext) _Mutation_createWhtText(ctx context.Context, field g
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWhtText(rctx, args["content"].(graphqlmodel.WhtTextInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*graphqlmodel.MutationResponse)
-	fc.Result = res
-	return ec.marshalOMutationResponse2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐMutationResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) _Mutation_createWhtImage(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	fc := &graphql.FieldContext{
-		Object:   "Mutation",
-		Field:    field,
-		Args:     nil,
-		IsMethod: true,
-	}
-
-	ctx = graphql.WithFieldContext(ctx, fc)
-	rawArgs := field.ArgumentMap(ec.Variables)
-	args, err := ec.field_Mutation_createWhtImage_args(ctx, rawArgs)
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	fc.Args = args
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWhtImage(rctx, args["content"].(graphqlmodel.WhtImageInput))
+		return ec.resolvers.Mutation().CreateWht(rctx, args["wht"].(model.WhtInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1138,7 +1087,7 @@ func (ec *executionContext) _NoopPayload_clientMutationId(ctx context.Context, f
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _OtherContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.OtherContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _OtherContent_id(ctx context.Context, field graphql.CollectedField, obj *model.OtherContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1172,7 +1121,7 @@ func (ec *executionContext) _OtherContent_id(ctx context.Context, field graphql.
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _OtherContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.OtherContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _OtherContent_name(ctx context.Context, field graphql.CollectedField, obj *model.OtherContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1203,7 +1152,7 @@ func (ec *executionContext) _OtherContent_name(ctx context.Context, field graphq
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _OtherContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.OtherContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _OtherContent_contentType(ctx context.Context, field graphql.CollectedField, obj *model.OtherContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1232,9 +1181,9 @@ func (ec *executionContext) _OtherContent_contentType(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(graphqlmodel.ContentType)
+	res := resTmp.(model.ContentType)
 	fc.Result = res
-	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query_node(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1299,7 +1248,7 @@ func (ec *executionContext) _Query_findWht(ctx context.Context, field graphql.Co
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().FindWht(rctx, args["condition"].(*graphqlmodel.WhtConditionInput))
+		return ec.resolvers.Query().FindWht(rctx, args["condition"].(*model.WhtConditionInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1311,9 +1260,9 @@ func (ec *executionContext) _Query_findWht(ctx context.Context, field graphql.Co
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]graphqlmodel.Wht)
+	res := resTmp.([]model.Wht)
 	fc.Result = res
-	return ec.marshalNWht2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtᚄ(ctx, field.Selections, res)
+	return ec.marshalNWht2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1385,7 +1334,7 @@ func (ec *executionContext) _Query___schema(ctx context.Context, field graphql.C
 	return ec.marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TextContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _TextContent_id(ctx context.Context, field graphql.CollectedField, obj *model.TextContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1419,7 +1368,7 @@ func (ec *executionContext) _TextContent_id(ctx context.Context, field graphql.C
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TextContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _TextContent_name(ctx context.Context, field graphql.CollectedField, obj *model.TextContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1450,7 +1399,7 @@ func (ec *executionContext) _TextContent_name(ctx context.Context, field graphql
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TextContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _TextContent_contentType(ctx context.Context, field graphql.CollectedField, obj *model.TextContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1479,12 +1428,12 @@ func (ec *executionContext) _TextContent_contentType(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(graphqlmodel.ContentType)
+	res := resTmp.(model.ContentType)
 	fc.Result = res
-	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _TextContent_text(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.TextContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _TextContent_text(ctx context.Context, field graphql.CollectedField, obj *model.TextContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1518,7 +1467,7 @@ func (ec *executionContext) _TextContent_text(ctx context.Context, field graphql
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _VoiceContent_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.VoiceContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _VoiceContent_id(ctx context.Context, field graphql.CollectedField, obj *model.VoiceContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1552,7 +1501,7 @@ func (ec *executionContext) _VoiceContent_id(ctx context.Context, field graphql.
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _VoiceContent_name(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.VoiceContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _VoiceContent_name(ctx context.Context, field graphql.CollectedField, obj *model.VoiceContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1583,7 +1532,7 @@ func (ec *executionContext) _VoiceContent_name(ctx context.Context, field graphq
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _VoiceContent_contentType(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.VoiceContent) (ret graphql.Marshaler) {
+func (ec *executionContext) _VoiceContent_contentType(ctx context.Context, field graphql.CollectedField, obj *model.VoiceContent) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1612,12 +1561,12 @@ func (ec *executionContext) _VoiceContent_contentType(ctx context.Context, field
 		}
 		return graphql.Null
 	}
-	res := resTmp.(graphqlmodel.ContentType)
+	res := resTmp.(model.ContentType)
 	fc.Result = res
-	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx, field.Selections, res)
+	return ec.marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1651,7 +1600,7 @@ func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.Collected
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1685,7 +1634,7 @@ func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.C
 	return ec.marshalNDate2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1716,7 +1665,7 @@ func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.Collec
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Wht_contents(ctx context.Context, field graphql.CollectedField, obj *graphqlmodel.Wht) (ret graphql.Marshaler) {
+func (ec *executionContext) _Wht_contents(ctx context.Context, field graphql.CollectedField, obj *model.Wht) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -1745,9 +1694,9 @@ func (ec *executionContext) _Wht_contents(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]graphqlmodel.Content)
+	res := resTmp.([]model.Content)
 	fc.Result = res
-	return ec.marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentᚄ(ctx, field.Selections, res)
+	return ec.marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -2805,6 +2754,30 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputContentInput(ctx context.Context, obj interface{}) (model.ContentInput, error) {
+	var it model.ContentInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "contentType":
+			var err error
+			it.ContentType, err = ec.unmarshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputNoopInput(ctx context.Context, obj interface{}) (graphqlmodel.NoopInput, error) {
 	var it graphqlmodel.NoopInput
 	var asMap = obj.(map[string]interface{})
@@ -2823,8 +2796,8 @@ func (ec *executionContext) unmarshalInputNoopInput(ctx context.Context, obj int
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWhtConditionInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtConditionInput, error) {
-	var it graphqlmodel.WhtConditionInput
+func (ec *executionContext) unmarshalInputWhtConditionInput(ctx context.Context, obj interface{}) (model.WhtConditionInput, error) {
+	var it model.WhtConditionInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -2841,8 +2814,8 @@ func (ec *executionContext) unmarshalInputWhtConditionInput(ctx context.Context,
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWhtImageInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtImageInput, error) {
-	var it graphqlmodel.WhtImageInput
+func (ec *executionContext) unmarshalInputWhtImageContentInput(ctx context.Context, obj interface{}) (model.WhtImageContentInput, error) {
+	var it model.WhtImageContentInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -2871,8 +2844,32 @@ func (ec *executionContext) unmarshalInputWhtImageInput(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWhtMovieInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtMovieInput, error) {
-	var it graphqlmodel.WhtMovieInput
+func (ec *executionContext) unmarshalInputWhtInput(ctx context.Context, obj interface{}) (model.WhtInput, error) {
+	var it model.WhtInput
+	var asMap = obj.(map[string]interface{})
+
+	for k, v := range asMap {
+		switch k {
+		case "title":
+			var err error
+			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "contents":
+			var err error
+			it.Contents, err = ec.unmarshalNContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentInputᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputWhtMovieContentInput(ctx context.Context, obj interface{}) (model.WhtMovieContentInput, error) {
+	var it model.WhtMovieContentInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -2895,8 +2892,8 @@ func (ec *executionContext) unmarshalInputWhtMovieInput(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWhtOtherInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtOtherInput, error) {
-	var it graphqlmodel.WhtOtherInput
+func (ec *executionContext) unmarshalInputWhtOtherContentInput(ctx context.Context, obj interface{}) (model.WhtOtherContentInput, error) {
+	var it model.WhtOtherContentInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -2919,8 +2916,8 @@ func (ec *executionContext) unmarshalInputWhtOtherInput(ctx context.Context, obj
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWhtTextInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtTextInput, error) {
-	var it graphqlmodel.WhtTextInput
+func (ec *executionContext) unmarshalInputWhtTextContentInput(ctx context.Context, obj interface{}) (model.WhtTextContentInput, error) {
+	var it model.WhtTextContentInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -2949,8 +2946,8 @@ func (ec *executionContext) unmarshalInputWhtTextInput(ctx context.Context, obj 
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputWhtVoiceInput(ctx context.Context, obj interface{}) (graphqlmodel.WhtVoiceInput, error) {
-	var it graphqlmodel.WhtVoiceInput
+func (ec *executionContext) unmarshalInputWhtVoiceContentInput(ctx context.Context, obj interface{}) (model.WhtVoiceContentInput, error) {
+	var it model.WhtVoiceContentInput
 	var asMap = obj.(map[string]interface{})
 
 	for k, v := range asMap {
@@ -2977,41 +2974,41 @@ func (ec *executionContext) unmarshalInputWhtVoiceInput(ctx context.Context, obj
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Content(ctx context.Context, sel ast.SelectionSet, obj graphqlmodel.Content) graphql.Marshaler {
+func (ec *executionContext) _Content(ctx context.Context, sel ast.SelectionSet, obj model.Content) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case graphqlmodel.TextContent:
+	case model.TextContent:
 		return ec._TextContent(ctx, sel, &obj)
-	case *graphqlmodel.TextContent:
+	case *model.TextContent:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._TextContent(ctx, sel, obj)
-	case graphqlmodel.ImageContent:
+	case model.ImageContent:
 		return ec._ImageContent(ctx, sel, &obj)
-	case *graphqlmodel.ImageContent:
+	case *model.ImageContent:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._ImageContent(ctx, sel, obj)
-	case graphqlmodel.VoiceContent:
+	case model.VoiceContent:
 		return ec._VoiceContent(ctx, sel, &obj)
-	case *graphqlmodel.VoiceContent:
+	case *model.VoiceContent:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._VoiceContent(ctx, sel, obj)
-	case graphqlmodel.MovieContent:
+	case model.MovieContent:
 		return ec._MovieContent(ctx, sel, &obj)
-	case *graphqlmodel.MovieContent:
+	case *model.MovieContent:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._MovieContent(ctx, sel, obj)
-	case graphqlmodel.OtherContent:
+	case model.OtherContent:
 		return ec._OtherContent(ctx, sel, &obj)
-	case *graphqlmodel.OtherContent:
+	case *model.OtherContent:
 		if obj == nil {
 			return graphql.Null
 		}
@@ -3025,9 +3022,9 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
-	case graphqlmodel.Wht:
+	case model.Wht:
 		return ec._Wht(ctx, sel, &obj)
-	case *graphqlmodel.Wht:
+	case *model.Wht:
 		if obj == nil {
 			return graphql.Null
 		}
@@ -3043,7 +3040,7 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 
 var imageContentImplementors = []string{"ImageContent", "Content"}
 
-func (ec *executionContext) _ImageContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.ImageContent) graphql.Marshaler {
+func (ec *executionContext) _ImageContent(ctx context.Context, sel ast.SelectionSet, obj *model.ImageContent) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, imageContentImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3082,7 +3079,7 @@ func (ec *executionContext) _ImageContent(ctx context.Context, sel ast.Selection
 
 var movieContentImplementors = []string{"MovieContent", "Content"}
 
-func (ec *executionContext) _MovieContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.MovieContent) graphql.Marshaler {
+func (ec *executionContext) _MovieContent(ctx context.Context, sel ast.SelectionSet, obj *model.MovieContent) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, movieContentImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3131,10 +3128,8 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = graphql.MarshalString("Mutation")
 		case "noop":
 			out.Values[i] = ec._Mutation_noop(ctx, field)
-		case "createWhtText":
-			out.Values[i] = ec._Mutation_createWhtText(ctx, field)
-		case "createWhtImage":
-			out.Values[i] = ec._Mutation_createWhtImage(ctx, field)
+		case "createWht":
+			out.Values[i] = ec._Mutation_createWht(ctx, field)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -3196,7 +3191,7 @@ func (ec *executionContext) _NoopPayload(ctx context.Context, sel ast.SelectionS
 
 var otherContentImplementors = []string{"OtherContent", "Content"}
 
-func (ec *executionContext) _OtherContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.OtherContent) graphql.Marshaler {
+func (ec *executionContext) _OtherContent(ctx context.Context, sel ast.SelectionSet, obj *model.OtherContent) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, otherContentImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3285,7 +3280,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 
 var textContentImplementors = []string{"TextContent", "Content"}
 
-func (ec *executionContext) _TextContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.TextContent) graphql.Marshaler {
+func (ec *executionContext) _TextContent(ctx context.Context, sel ast.SelectionSet, obj *model.TextContent) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, textContentImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3324,7 +3319,7 @@ func (ec *executionContext) _TextContent(ctx context.Context, sel ast.SelectionS
 
 var voiceContentImplementors = []string{"VoiceContent", "Content"}
 
-func (ec *executionContext) _VoiceContent(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.VoiceContent) graphql.Marshaler {
+func (ec *executionContext) _VoiceContent(ctx context.Context, sel ast.SelectionSet, obj *model.VoiceContent) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, voiceContentImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3358,7 +3353,7 @@ func (ec *executionContext) _VoiceContent(ctx context.Context, sel ast.Selection
 
 var whtImplementors = []string{"Wht", "Node"}
 
-func (ec *executionContext) _Wht(ctx context.Context, sel ast.SelectionSet, obj *graphqlmodel.Wht) graphql.Marshaler {
+func (ec *executionContext) _Wht(ctx context.Context, sel ast.SelectionSet, obj *model.Wht) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, whtImplementors)
 
 	out := graphql.NewFieldSet(fields)
@@ -3663,7 +3658,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContent(ctx context.Context, sel ast.SelectionSet, v graphqlmodel.Content) graphql.Marshaler {
+func (ec *executionContext) marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContent(ctx context.Context, sel ast.SelectionSet, v model.Content) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3673,7 +3668,7 @@ func (ec *executionContext) marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbff�
 	return ec._Content(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentᚄ(ctx context.Context, sel ast.SelectionSet, v []graphqlmodel.Content) graphql.Marshaler {
+func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Content) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3697,7 +3692,7 @@ func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑb
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContent(ctx, sel, v[i])
+			ret[i] = ec.marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContent(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3710,12 +3705,36 @@ func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑb
 	return ret
 }
 
-func (ec *executionContext) unmarshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx context.Context, v interface{}) (graphqlmodel.ContentType, error) {
-	var res graphqlmodel.ContentType
+func (ec *executionContext) unmarshalNContentInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentInput(ctx context.Context, v interface{}) (model.ContentInput, error) {
+	return ec.unmarshalInputContentInput(ctx, v)
+}
+
+func (ec *executionContext) unmarshalNContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentInputᚄ(ctx context.Context, v interface{}) ([]model.ContentInput, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]model.ContentInput, len(vSlice))
+	for i := range vSlice {
+		res[i], err = ec.unmarshalNContentInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentInput(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) unmarshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx context.Context, v interface{}) (model.ContentType, error) {
+	var res model.ContentType
 	return res, res.UnmarshalGQL(v)
 }
 
-func (ec *executionContext) marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐContentType(ctx context.Context, sel ast.SelectionSet, v graphqlmodel.ContentType) graphql.Marshaler {
+func (ec *executionContext) marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐContentType(ctx context.Context, sel ast.SelectionSet, v model.ContentType) graphql.Marshaler {
 	return v
 }
 
@@ -3761,11 +3780,11 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 	return res
 }
 
-func (ec *executionContext) marshalNWht2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWht(ctx context.Context, sel ast.SelectionSet, v graphqlmodel.Wht) graphql.Marshaler {
+func (ec *executionContext) marshalNWht2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWht(ctx context.Context, sel ast.SelectionSet, v model.Wht) graphql.Marshaler {
 	return ec._Wht(ctx, sel, &v)
 }
 
-func (ec *executionContext) marshalNWht2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtᚄ(ctx context.Context, sel ast.SelectionSet, v []graphqlmodel.Wht) graphql.Marshaler {
+func (ec *executionContext) marshalNWht2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtᚄ(ctx context.Context, sel ast.SelectionSet, v []model.Wht) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3789,7 +3808,7 @@ func (ec *executionContext) marshalNWht2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbff�
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNWht2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWht(ctx, sel, v[i])
+			ret[i] = ec.marshalNWht2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWht(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)
@@ -3802,12 +3821,8 @@ func (ec *executionContext) marshalNWht2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbff�
 	return ret
 }
 
-func (ec *executionContext) unmarshalNWhtImageInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtImageInput(ctx context.Context, v interface{}) (graphqlmodel.WhtImageInput, error) {
-	return ec.unmarshalInputWhtImageInput(ctx, v)
-}
-
-func (ec *executionContext) unmarshalNWhtTextInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtTextInput(ctx context.Context, v interface{}) (graphqlmodel.WhtTextInput, error) {
-	return ec.unmarshalInputWhtTextInput(ctx, v)
+func (ec *executionContext) unmarshalNWhtInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtInput(ctx context.Context, v interface{}) (model.WhtInput, error) {
+	return ec.unmarshalInputWhtInput(ctx, v)
 }
 
 func (ec *executionContext) marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx context.Context, sel ast.SelectionSet, v introspection.Directive) graphql.Marshaler {
@@ -4146,15 +4161,15 @@ func (ec *executionContext) marshalOString2ᚖstring(ctx context.Context, sel as
 	return ec.marshalOString2string(ctx, sel, *v)
 }
 
-func (ec *executionContext) unmarshalOWhtConditionInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtConditionInput(ctx context.Context, v interface{}) (graphqlmodel.WhtConditionInput, error) {
+func (ec *executionContext) unmarshalOWhtConditionInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtConditionInput(ctx context.Context, v interface{}) (model.WhtConditionInput, error) {
 	return ec.unmarshalInputWhtConditionInput(ctx, v)
 }
 
-func (ec *executionContext) unmarshalOWhtConditionInput2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtConditionInput(ctx context.Context, v interface{}) (*graphqlmodel.WhtConditionInput, error) {
+func (ec *executionContext) unmarshalOWhtConditionInput2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtConditionInput(ctx context.Context, v interface{}) (*model.WhtConditionInput, error) {
 	if v == nil {
 		return nil, nil
 	}
-	res, err := ec.unmarshalOWhtConditionInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐWhtConditionInput(ctx, v)
+	res, err := ec.unmarshalOWhtConditionInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋapplicationᚋmodelᚐWhtConditionInput(ctx, v)
 	return &res, err
 }
 
