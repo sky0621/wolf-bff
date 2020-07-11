@@ -38,20 +38,14 @@ func execMain() exitCode {
 		log.Printf("%+v", err)
 		return abnormalEnd
 	}
-	defer func() {
-		if err := app.db.Close(); err != nil {
-			log.Printf("%+v", err)
-		}
-	}()
+	defer app.shutdown()
 
 	// OSシグナル受信したらグレースフルシャットダウン
 	go func() {
 		q := make(chan os.Signal)
 		signal.Notify(q, os.Interrupt, os.Kill, syscall.SIGTERM)
 		<-q
-		if err := app.db.Close(); err != nil {
-			log.Printf("%+v", err)
-		}
+		app.shutdown()
 		os.Exit(abnormalEnd)
 	}()
 
@@ -71,5 +65,14 @@ func newApp(db *sqlx.DB, r *chi.Mux) app {
 	return app{
 		db: db,
 		r:  r,
+	}
+}
+
+func (a app) shutdown() {
+	if a.db == nil {
+		return
+	}
+	if err := a.db.Close(); err != nil {
+		log.Printf("%+v", err)
 	}
 }

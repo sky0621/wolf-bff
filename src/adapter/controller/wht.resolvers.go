@@ -7,6 +7,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/sky0621/wolf-bff/src/adapter"
 	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
 	"github.com/sky0621/wolf-bff/src/adapter/gateway"
 	"github.com/sky0621/wolf-bff/src/application"
@@ -15,13 +17,17 @@ import (
 )
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht model.WhtInput) (*graphqlmodel.MutationResponse, error) {
-	id, err := application.NewWht(gateway.NewWhtRepository(r.db)).CreateWht(ctx, wht)
+	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
+		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, wht)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to CreateWht: %w", err)
+		}
+		return &adapter.TxResponse{CreatedID: id}, nil
+	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to CreateWht: %w", err)
+		return nil, xerrors.Errorf("failed to Tx: %w", err)
 	}
-	return &graphqlmodel.MutationResponse{
-		ID: &id,
-	}, nil
+	return &graphqlmodel.MutationResponse{ID: &res.CreatedID}, nil
 }
 
 func (r *queryResolver) FindWht(ctx context.Context, condition *model.WhtConditionInput) ([]model.Wht, error) {

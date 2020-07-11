@@ -14,10 +14,10 @@ type Wht struct {
 	whtRepository WhtRepository
 }
 
-func (w Wht) CreateWht(ctx context.Context, in model.WhtInput) (string, error) {
+func (w Wht) CreateWht(ctx context.Context, in model.WhtInput) (int64, error) {
 	return w.whtRepository.CreateWht(ctx, in)
 }
 
 type WhtRepository interface {
-	CreateWht(ctx context.Context, in model.WhtInput) (string, error)
+	CreateWht(ctx context.Context, in model.WhtInput) (int64, error)
 }
