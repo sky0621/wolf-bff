@@ -1,12 +1,12 @@
 
 extend type Mutation {
     "「今日こと」を登録"
-    createWht(wht: WhtInput!): MutationResponse
+    createWht(wht: WhtInput!): MutationResponse @hasRole(role: EDITOR)
 }
 
 extend type Query {
     "「今日こと」を取得"
-    findWht(condition: WhtConditionInput): [Wht!]!
+    findWht(condition: WhtConditionInput): [Wht!]! @hasRole(role: VIEWER)
 }
 
 # -------------------------------------------------------------------

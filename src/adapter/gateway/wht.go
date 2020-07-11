@@ -8,19 +8,18 @@ import (
 
 	"github.com/sky0621/wolf-bff/src/adapter/gateway/sqlboilermodel"
 	"github.com/sky0621/wolf-bff/src/application"
-	"github.com/volatiletech/null"
+	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/application/model"
 )
 
-func NewWhtRepository(db sqlx.Execer) application.WhtRepository {
+func NewWhtRepository(db boil.ContextExecutor) application.WhtRepository {
 	return &whtRepository{db: db}
 }
 
 type whtRepository struct {
-	db sqlx.Execer
+	db boil.ContextExecutor
 }
 
 func (r *whtRepository) CreateWht(ctx context.Context, in model.WhtInput) (int64, error) {

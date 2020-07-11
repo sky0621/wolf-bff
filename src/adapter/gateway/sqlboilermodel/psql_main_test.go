@@ -18,11 +18,11 @@ import (
 	"github.com/kat-co/vala"
 	_ "github.com/lib/pq"
 	"github.com/spf13/viper"
-	"github.com/volatiletech/sqlboiler/drivers/sqlboiler-psql/driver"
-	"github.com/volatiletech/sqlboiler/randomize"
+	"github.com/volatiletech/randomize"
+	"github.com/volatiletech/sqlboiler/v4/drivers/sqlboiler-psql/driver"
 )
 
-var rgxPGFkey = regexp.MustCompile(`(?m)^ALTER TABLE ONLY .*\n\s+ADD CONSTRAINT .*? FOREIGN KEY .*?;\n`)
+var rgxPGFkey = regexp.MustCompile(`(?m)^ALTER TABLE .*\n\s+ADD CONSTRAINT .*? FOREIGN KEY .*?;\n`)
 
 type pgTester struct {
 	dbConn *sql.DB

@@ -43,6 +43,7 @@ type ResolverRoot interface {
 }
 
 type DirectiveRoot struct {
+	HasRole func(ctx context.Context, obj interface{}, next graphql.Resolver, role graphqlmodel.Role) (res interface{}, err error)
 }
 
 type ComplexityRoot struct {
@@ -434,16 +435,25 @@ type NoopPayload {
 }
 
 scalar Date
-`, BuiltIn: false},
+
+directive @hasRole(role: Role!) on FIELD_DEFINITION
+
+enum Role {
+  ADMIN
+  MANAGER
+  EDITOR
+  VIEWER
+  GUEST
+}`, BuiltIn: false},
 	&ast.Source{Name: "../schema/wht.graphqls", Input: `
 extend type Mutation {
     "「今日こと」を登録"
-    createWht(wht: WhtInput!): MutationResponse
+    createWht(wht: WhtInput!): MutationResponse @hasRole(role: EDITOR)
 }
 
 extend type Query {
     "「今日こと」を取得"
-    findWht(condition: WhtConditionInput): [Wht!]!
+    findWht(condition: WhtConditionInput): [Wht!]! @hasRole(role: VIEWER)
 }
 
 # -------------------------------------------------------------------
@@ -610,6 +620,20 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 // endregion ************************** generated!.gotpl **************************
 
 // region    ***************************** args.gotpl *****************************
+
+func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 graphqlmodel.Role
+	if tmp, ok := rawArgs["role"]; ok {
+		arg0, err = ec.unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐRole(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["role"] = arg0
+	return args, nil
+}
 
 func (ec *executionContext) field_Mutation_createWht_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
@@ -1010,8 +1034,32 @@ func (ec *executionContext) _Mutation_createWht(ctx context.Context, field graph
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateWht(rctx, args["wht"].(model.WhtInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateWht(rctx, args["wht"].(model.WhtInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐRole(ctx, "EDITOR")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*graphqlmodel.MutationResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel.MutationResponse`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1247,8 +1295,32 @@ func (ec *executionContext) _Query_findWht(ctx context.Context, field graphql.Co
 	}
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().FindWht(rctx, args["condition"].(*model.WhtConditionInput))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().FindWht(rctx, args["condition"].(*model.WhtConditionInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐRole(ctx, "VIEWER")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, err
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]model.Wht); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []github.com/sky0621/wolf-bff/src/application/model.Wht`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -3764,6 +3836,15 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐRole(ctx context.Context, v interface{}) (graphqlmodel.Role, error) {
+	var res graphqlmodel.Role
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgraphqlmodelᚐRole(ctx context.Context, sel ast.SelectionSet, v graphqlmodel.Role) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {

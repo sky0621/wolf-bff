@@ -6,6 +6,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/adapter"
@@ -27,12 +28,13 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht model.WhtInput) (*
 	if err != nil {
 		return nil, xerrors.Errorf("failed to Tx: %w", err)
 	}
-	return &graphqlmodel.MutationResponse{ID: &res.CreatedID}, nil
+	id := strconv.Itoa(int(res.CreatedID))
+	return &graphqlmodel.MutationResponse{ID: &id}, nil
 }
 
 func (r *queryResolver) FindWht(ctx context.Context, condition *model.WhtConditionInput) ([]model.Wht, error) {
 	// FIXME:
-	panic(fmt.Errorf("not implemented"))
+	return []model.Wht{}, nil
 }
 
 func (r *whtResolver) Contents(ctx context.Context, obj *model.Wht) ([]model.Content, error) {

@@ -28,3 +28,13 @@ type NoopPayload {
 }
 
 scalar Date
+
+directive @hasRole(role: Role!) on FIELD_DEFINITION
+
+enum Role {
+  ADMIN
+  MANAGER
+  EDITOR
+  VIEWER
+  GUEST
+}

@@ -7,13 +7,15 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/google/wire"
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/adapter/controller"
-	"github.com/volatiletech/sqlboiler/boil"
+	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
+	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
 )
 
@@ -51,8 +53,16 @@ func connectDB(cfg config) (*sqlx.DB, error) {
 
 func setupRouter(cfg config, resolver controller.ResolverRoot) *chi.Mux {
 	r := chi.NewRouter()
+
 	// FIXME: 本番はNG
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
-	r.Handle("/query", handler.NewDefaultServer(controller.NewExecutableSchema(controller.Config{Resolvers: resolver})))
+
+	c := controller.Config{Resolvers: resolver}
+	// FIXME: 認可実装
+	c.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role graphqlmodel.Role) (interface{}, error) {
+		// or let it pass through
+		return next(ctx)
+	}
+	r.Handle("/query", handler.NewDefaultServer(controller.NewExecutableSchema(c)))
 	return r
 }
