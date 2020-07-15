@@ -34,7 +34,7 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *WhtConditionInpu
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]Content, error) {
+func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

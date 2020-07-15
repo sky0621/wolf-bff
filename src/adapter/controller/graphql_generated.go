@@ -113,7 +113,7 @@ type QueryResolver interface {
 	FindWht(ctx context.Context, condition *WhtConditionInput) ([]gqlmodel.Wht, error)
 }
 type WhtResolver interface {
-	Contents(ctx context.Context, obj *gqlmodel.Wht) ([]Content, error)
+	Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error)
 }
 
 type executableSchema struct {
@@ -1882,9 +1882,9 @@ func (ec *executionContext) _Wht_contents(ctx context.Context, field graphql.Col
 		}
 		return graphql.Null
 	}
-	res := resTmp.([]Content)
+	res := resTmp.([]gqlmodel.Content)
 	fc.Result = res
-	return ec.marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚐContentᚄ(ctx, field.Selections, res)
+	return ec.marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐContentᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) ___Directive_name(ctx context.Context, field graphql.CollectedField, obj *introspection.Directive) (ret graphql.Marshaler) {
@@ -3072,7 +3072,7 @@ func (ec *executionContext) unmarshalInputWhtInput(ctx context.Context, obj inte
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _Content(ctx context.Context, sel ast.SelectionSet, obj Content) graphql.Marshaler {
+func (ec *executionContext) _Content(ctx context.Context, sel ast.SelectionSet, obj gqlmodel.Content) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
@@ -3725,7 +3725,7 @@ func (ec *executionContext) marshalNBoolean2bool(ctx context.Context, sel ast.Se
 	return res
 }
 
-func (ec *executionContext) marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚐContent(ctx context.Context, sel ast.SelectionSet, v Content) graphql.Marshaler {
+func (ec *executionContext) marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐContent(ctx context.Context, sel ast.SelectionSet, v gqlmodel.Content) graphql.Marshaler {
 	if v == nil {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
@@ -3735,7 +3735,7 @@ func (ec *executionContext) marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbff�
 	return ec._Content(ctx, sel, v)
 }
 
-func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚐContentᚄ(ctx context.Context, sel ast.SelectionSet, v []Content) graphql.Marshaler {
+func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐContentᚄ(ctx context.Context, sel ast.SelectionSet, v []gqlmodel.Content) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
 	isLen1 := len(v) == 1
@@ -3759,7 +3759,7 @@ func (ec *executionContext) marshalNContent2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑb
 			if !isLen1 {
 				defer wg.Done()
 			}
-			ret[i] = ec.marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚐContent(ctx, sel, v[i])
+			ret[i] = ec.marshalNContent2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐContent(ctx, sel, v[i])
 		}
 		if isLen1 {
 			f(i)

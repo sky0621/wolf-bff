@@ -10,11 +10,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
-// コンテンツ
-type Content interface {
-	IsContent()
-}
-
 type Node interface {
 	IsNode()
 }
