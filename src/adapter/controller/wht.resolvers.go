@@ -6,6 +6,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
 )
@@ -35,7 +36,13 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *WhtConditionInpu
 }
 
 func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
-	panic(fmt.Errorf("not implemented"))
+	contents, err := For(ctx).ContentLoader.Load(obj.ID)
+	if err != nil {
+		// TODO: logger
+		log.Println(err)
+		return nil, err
+	}
+	return contents, nil
 }
 
 // Wht returns WhtResolver implementation.

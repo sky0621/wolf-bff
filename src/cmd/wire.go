@@ -9,10 +9,15 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/google/wire"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/jmoiron/sqlx"
+	"github.com/sky0621/fs-mng-backend/graph"
+	"github.com/sky0621/fs-mng-backend/graph/generated"
 	"github.com/sky0621/wolf-bff/src/adapter/controller"
 	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
 	"github.com/volatiletech/sqlboiler/v4/boil"
@@ -63,6 +68,30 @@ func setupRouter(cfg config, resolver controller.ResolverRoot) *chi.Mux {
 		// or let it pass through
 		return next(ctx)
 	}
-	r.Handle("/query", handler.NewDefaultServer(controller.NewExecutableSchema(c)))
+	r.Handle("/query", controller.DataLoaderMiddleware(resolver, graphQlServer(controller.NewExecutableSchema(c))))
 	return r
+}
+
+func graphQlServer(resolver *graph.Resolver) *handler.Server {
+	srv := handler.New(generated.NewExecutableSchema(generated.Config{
+		Resolvers: resolver,
+	}))
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.POST{})
+
+	srv.SetQueryCache(lru.New(1000))
+
+	srv.Use(extension.Introspection{})
+	srv.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New(100),
+	})
+
+	var mb int64 = 1 << 20
+	srv.AddTransport(transport.MultipartForm{
+		MaxMemory:     128 * mb,
+		MaxUploadSize: 100 * mb,
+	})
+
+	return srv
 }
