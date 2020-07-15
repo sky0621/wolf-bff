@@ -6,39 +6,35 @@ package controller
 import (
 	"context"
 	"fmt"
-	"strconv"
 
-	"github.com/jmoiron/sqlx"
-	"github.com/sky0621/wolf-bff/src/adapter"
-	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
-	"github.com/sky0621/wolf-bff/src/adapter/gateway"
-	"github.com/sky0621/wolf-bff/src/application"
-	"github.com/sky0621/wolf-bff/src/application/model"
-	"golang.org/x/xerrors"
+	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
 )
 
-func (r *mutationResolver) CreateWht(ctx context.Context, wht model.WhtInput) (*graphqlmodel.MutationResponse, error) {
-	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, wht)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to CreateWht: %w", err)
-		}
-		return &adapter.TxResponse{CreatedID: id}, nil
-	})
-	if err != nil {
-		return nil, xerrors.Errorf("failed to Tx: %w", err)
-	}
-	id := strconv.Itoa(int(res.CreatedID))
-	return &graphqlmodel.MutationResponse{ID: &id}, nil
+func (r *mutationResolver) CreateWht(ctx context.Context, wht WhtInput) (*MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) FindWht(ctx context.Context, condition *model.WhtConditionInput) ([]model.Wht, error) {
-	// FIXME:
-	return []model.Wht{}, nil
+func (r *mutationResolver) CreateTextContents(ctx context.Context, inputs []TextContentInput) (*MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *whtResolver) Contents(ctx context.Context, obj *model.Wht) ([]model.Content, error) {
-	// FIXME:
+func (r *mutationResolver) CreateImageContents(ctx context.Context, inputs []ImageContentInput) (*MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) CreateVoiceContents(ctx context.Context, inputs []VoiceContentInput) (*MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []MovieContentInput) (*MutationResponse, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *queryResolver) FindWht(ctx context.Context, condition *WhtConditionInput) ([]gqlmodel.Wht, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]Content, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

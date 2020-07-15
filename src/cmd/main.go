@@ -40,7 +40,6 @@ func execMain() exitCode {
 	}
 	defer app.shutdown()
 
-	// OSシグナル受信したらグレースフルシャットダウン
 	go func() {
 		q := make(chan os.Signal)
 		signal.Notify(q, os.Interrupt, os.Kill, syscall.SIGTERM)

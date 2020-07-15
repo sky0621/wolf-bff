@@ -6,15 +6,13 @@ package controller
 import (
 	"context"
 	"fmt"
-
-	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
 )
 
-func (r *mutationResolver) Noop(ctx context.Context, input *graphqlmodel.NoopInput) (*graphqlmodel.NoopPayload, error) {
+func (r *mutationResolver) Noop(ctx context.Context, input *NoopInput) (*NoopPayload, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Node(ctx context.Context, id string) (graphqlmodel.Node, error) {
+func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

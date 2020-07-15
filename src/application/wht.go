@@ -20,4 +20,5 @@ func (w Wht) CreateWht(ctx context.Context, in model.WhtInput) (int64, error) {
 
 type WhtRepository interface {
 	CreateWht(ctx context.Context, in model.WhtInput) (int64, error)
+	Read(ctx context.Context) model.Wht
 }

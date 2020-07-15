@@ -1,0 +1,43 @@
+
+extend type Mutation {
+    "「今日こと」を登録"
+    createWht(wht: WhtInput!): MutationResponse @hasRole(role: EDITOR)
+    "テキストコンテンツを登録"
+    createTextContents(inputs: [TextContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    "画像コンテンツを登録"
+    createImageContents(inputs: [ImageContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    "音声コンテンツを登録"
+    createVoiceContents(inputs: [VoiceContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    "動画コンテンツを登録"
+    createMovieContents(inputs: [MovieContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+}
+
+"今日ことインプット"
+input WhtInput {
+    "タイトル"
+    title: String
+}
+
+"テキストコンテンツインプット"
+input TextContentInput {
+    "テキスト"
+    text: String!
+}
+
+"画像コンテンツインプット"
+input ImageContentInput {
+    "画像"
+    image: Upload!
+}
+
+"音声コンテンツインプット"
+input VoiceContentInput {
+    "音声"
+    voice: Upload!
+}
+
+"動画コンテンツインプット"
+input MovieContentInput {
+    "動画"
+    movie: Upload!
+}
