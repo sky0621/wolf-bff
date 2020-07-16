@@ -1,5 +1,7 @@
 package gqlmodel
 
+import "github.com/sky0621/wolf-bff/src/application/model"
+
 // 今日こと
 type Wht struct {
 	// ID
@@ -13,3 +15,15 @@ type Wht struct {
 }
 
 func (Wht) IsNode() {}
+
+// 今日ことインプット
+type WhtInput struct {
+	// タイトル
+	Title *string `json:"title"`
+}
+
+func (i *WhtInput) ToModel() model.WhtInput {
+	return model.WhtInput{
+		Title: i.Title,
+	}
+}

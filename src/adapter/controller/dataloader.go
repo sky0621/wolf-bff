@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -21,7 +22,7 @@ func DataLoaderMiddleware(resolver *Resolver, next http.Handler) http.Handler {
 				MaxBatch: 100,
 				Wait:     1 * time.Millisecond,
 				Fetch: func(keys []string) ([][]gqlmodel.Content, []error) {
-
+					fmt.Println(r.Context())
 					// FIXME:
 
 					return nil, nil

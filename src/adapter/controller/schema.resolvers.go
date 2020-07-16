@@ -6,13 +6,15 @@ package controller
 import (
 	"context"
 	"fmt"
+
+	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
 )
 
-func (r *mutationResolver) Noop(ctx context.Context, input *NoopInput) (*NoopPayload, error) {
+func (r *mutationResolver) Noop(ctx context.Context, input *gqlmodel.NoopInput) (*gqlmodel.NoopPayload, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
+func (r *queryResolver) Node(ctx context.Context, id string) (gqlmodel.Node, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 

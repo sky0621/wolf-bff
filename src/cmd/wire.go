@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/handler/extension"
@@ -62,13 +64,13 @@ func setupRouter(cfg config, resolver *controller.Resolver) *chi.Mux {
 }
 
 func graphQlServer(resolver *controller.Resolver) *handler.Server {
-	c := controller.Config{Resolvers: resolver}
+	cfg := controller.Config{Resolvers: resolver}
 	// FIXME: 認可実装
-	c.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role controller.Role) (interface{}, error) {
+	cfg.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role gqlmodel.Role) (interface{}, error) {
 		// or let it pass through
 		return next(ctx)
 	}
-	srv := handler.New(controller.NewExecutableSchema(c))
+	srv := handler.New(controller.NewExecutableSchema(cfg))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})

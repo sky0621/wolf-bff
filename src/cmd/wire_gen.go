@@ -17,6 +17,7 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/adapter/controller"
+	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
 	"time"
@@ -83,13 +84,13 @@ func setupRouter(cfg config, resolver *controller.Resolver) *chi.Mux {
 }
 
 func graphQlServer(resolver *controller.Resolver) *handler.Server {
-	c := controller.Config{Resolvers: resolver}
+	cfg := controller.Config{Resolvers: resolver}
 
-	c.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role controller.Role) (interface{}, error) {
+	cfg.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role gqlmodel.Role) (interface{}, error) {
 
 		return next(ctx)
 	}
-	srv := handler.New(controller.NewExecutableSchema(c))
+	srv := handler.New(controller.NewExecutableSchema(cfg))
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})

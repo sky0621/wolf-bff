@@ -11,27 +11,27 @@ import (
 	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
 )
 
-func (r *mutationResolver) CreateWht(ctx context.Context, wht controller.WhtInput) (*controller.MutationResponse, error) {
+func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) CreateTextContents(ctx context.Context, inputs []controller.TextContentInput) (*controller.MutationResponse, error) {
+func (r *mutationResolver) CreateTextContents(ctx context.Context, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) CreateImageContents(ctx context.Context, inputs []controller.ImageContentInput) (*controller.MutationResponse, error) {
+func (r *mutationResolver) CreateImageContents(ctx context.Context, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) CreateVoiceContents(ctx context.Context, inputs []controller.VoiceContentInput) (*controller.MutationResponse, error) {
+func (r *mutationResolver) CreateVoiceContents(ctx context.Context, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []controller.MovieContentInput) (*controller.MutationResponse, error) {
+func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []gqlmodel.MovieContentInput) (*gqlmodel.MutationResponse, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *queryResolver) FindWht(ctx context.Context, condition *controller.WhtConditionInput) ([]gqlmodel.Wht, error) {
+func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
 	panic(fmt.Errorf("not implemented"))
 }
 
