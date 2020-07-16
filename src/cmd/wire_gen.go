@@ -10,11 +10,13 @@ import (
 	"fmt"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
+	"github.com/99designs/gqlgen/graphql/handler/extension"
+	"github.com/99designs/gqlgen/graphql/handler/lru"
+	"github.com/99designs/gqlgen/graphql/handler/transport"
 	"github.com/99designs/gqlgen/graphql/playground"
 	"github.com/go-chi/chi"
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/adapter/controller"
-	"github.com/sky0621/wolf-bff/src/adapter/controller/graphqlmodel"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
 	"time"
@@ -31,8 +33,8 @@ func build(ctx context.Context, cfg config) (app, error) {
 	if err != nil {
 		return app{}, err
 	}
-	resolverRoot := controller.NewResolver(db)
-	mux := setupRouter(cfg, resolverRoot)
+	resolver := controller.NewResolver(db)
+	mux := setupRouter(cfg, resolver)
 	mainApp := newApp(db, mux)
 	return mainApp, nil
 }
@@ -44,8 +46,8 @@ func buildLocal(ctx context.Context, cfg config) (app, error) {
 	if err != nil {
 		return app{}, err
 	}
-	resolverRoot := controller.NewResolver(db)
-	mux := setupRouter(cfg, resolverRoot)
+	resolver := controller.NewResolver(db)
+	mux := setupRouter(cfg, resolver)
 	mainApp := newApp(db, mux)
 	return mainApp, nil
 }
@@ -72,17 +74,38 @@ func connectDB(cfg config) (*sqlx.DB, error) {
 	return db, nil
 }
 
-func setupRouter(cfg config, resolver controller.ResolverRoot) *chi.Mux {
+func setupRouter(cfg config, resolver *controller.Resolver) *chi.Mux {
 	r := chi.NewRouter()
 
 	r.HandleFunc("/", playground.Handler("GraphQL playground", "/query"))
+	r.Handle("/query", controller.DataLoaderMiddleware(resolver, graphQlServer(resolver)))
+	return r
+}
 
+func graphQlServer(resolver *controller.Resolver) *handler.Server {
 	c := controller.Config{Resolvers: resolver}
 
-	c.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role graphqlmodel.Role) (interface{}, error) {
+	c.Directives.HasRole = func(ctx context.Context, obj interface{}, next graphql.Resolver, role controller.Role) (interface{}, error) {
 
 		return next(ctx)
 	}
-	r.Handle("/query", handler.NewDefaultServer(controller.NewExecutableSchema(c)))
-	return r
+	srv := handler.New(controller.NewExecutableSchema(c))
+	srv.AddTransport(transport.Options{})
+	srv.AddTransport(transport.GET{})
+	srv.AddTransport(transport.POST{})
+
+	srv.SetQueryCache(lru.New(1000))
+
+	srv.Use(extension.Introspection{})
+	srv.Use(extension.AutomaticPersistedQuery{
+		Cache: lru.New(100),
+	})
+
+	var mb int64 = 1 << 20
+	srv.AddTransport(transport.MultipartForm{
+		MaxMemory:     128 * mb,
+		MaxUploadSize: 100 * mb,
+	})
+
+	return srv
 }

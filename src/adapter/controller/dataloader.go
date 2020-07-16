@@ -11,13 +11,13 @@ import (
 const loadersKey = "dataLoaders"
 
 type DataLoaders struct {
-	ContentLoader *gqlmodel.ContentLoader
+	contentLoader *gqlmodel.ContentLoader
 }
 
 func DataLoaderMiddleware(resolver *Resolver, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := context.WithValue(r.Context(), loadersKey, &DataLoaders{
-			ContentLoader: gqlmodel.NewContentLoader(gqlmodel.ContentLoaderConfig{
+			contentLoader: gqlmodel.NewContentLoader(gqlmodel.ContentLoaderConfig{
 				MaxBatch: 100,
 				Wait:     1 * time.Millisecond,
 				Fetch: func(keys []string) ([][]gqlmodel.Content, []error) {

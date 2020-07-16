@@ -11,7 +11,7 @@ require (
 	github.com/gofrs/uuid v3.3.0+incompatible // indirect
 	github.com/google/subcommands v1.2.0 // indirect
 	github.com/google/wire v0.4.0
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/kat-co/vala v0.0.0-20170210184112-42e1d8b61f12
 	github.com/kelseyhightower/envconfig v1.4.0
@@ -36,7 +36,7 @@ require (
 	github.com/volatiletech/strmangle v0.0.1
 	golang.org/x/sys v0.0.0-20200625212154-ddb9806d33ae // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200714190737-9048b464a08d // indirect
+	golang.org/x/tools v0.0.0-20200715235423-130c9f19d3fe // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
