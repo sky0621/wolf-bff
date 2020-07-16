@@ -18,8 +18,10 @@ import (
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/adapter/controller"
 	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
+	"github.com/vektah/gqlparser/v2/gqlerror"
 	"github.com/volatiletech/sqlboiler/v4/boil"
 	"golang.org/x/xerrors"
+	"log"
 	"time"
 )
 
@@ -106,6 +108,16 @@ func graphQlServer(resolver *controller.Resolver) *handler.Server {
 	srv.AddTransport(transport.MultipartForm{
 		MaxMemory:     128 * mb,
 		MaxUploadSize: 100 * mb,
+	})
+
+	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
+		log.Println(err)
+		return graphql.DefaultErrorPresenter(ctx, err)
+	})
+
+	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
+		log.Println(err)
+		return fmt.Errorf("Internal server error!")
 	})
 
 	return srv
