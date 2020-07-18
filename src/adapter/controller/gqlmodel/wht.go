@@ -1,13 +1,17 @@
 package gqlmodel
 
-import "github.com/sky0621/wolf-bff/src/application/model"
+import (
+	"time"
+
+	"github.com/sky0621/wolf-bff/src/application/model"
+)
 
 // 今日こと
 type Wht struct {
 	// ID
 	ID string `json:"id"`
 	// 記録日
-	RecordDate string `json:"recordDate"`
+	RecordDate time.Time `json:"recordDate"`
 	// タイトル
 	Title *string `json:"title"`
 	// コンテンツリスト
@@ -18,6 +22,8 @@ func (Wht) IsNode() {}
 
 // 今日ことインプット
 type WhtInput struct {
+	// 記録日
+	RecordDate time.Time `json:"recordDate"`
 	// タイトル
 	Title *string `json:"title"`
 }

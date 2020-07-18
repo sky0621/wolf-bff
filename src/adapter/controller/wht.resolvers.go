@@ -49,7 +49,8 @@ func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []gql
 }
 
 func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
-	panic(fmt.Errorf("not implemented"))
+	//application.NewWht(gateway.NewWhtRepository(r.db)).CreateWht()
+	return nil, nil
 }
 
 func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {

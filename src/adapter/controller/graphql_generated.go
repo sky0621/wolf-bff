@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/introspection"
@@ -433,6 +434,8 @@ extend type Mutation {
 
 "今日ことインプット"
 input WhtInput {
+    "記録日"
+    recordDate: Date!
     "タイトル"
     title: String
 }
@@ -1817,9 +1820,9 @@ func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.C
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(time.Time)
 	fc.Result = res
-	return ec.marshalNDate2string(ctx, field.Selections, res)
+	return ec.marshalNDate2timeᚐTime(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Wht_title(ctx context.Context, field graphql.CollectedField, obj *gqlmodel.Wht) (ret graphql.Marshaler) {
@@ -3056,6 +3059,12 @@ func (ec *executionContext) unmarshalInputWhtInput(ctx context.Context, obj inte
 
 	for k, v := range asMap {
 		switch k {
+		case "recordDate":
+			var err error
+			it.RecordDate, err = ec.unmarshalNDate2timeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "title":
 			var err error
 			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
@@ -3781,12 +3790,12 @@ func (ec *executionContext) marshalNContentType2githubᚗcomᚋsky0621ᚋwolfᚑ
 	return v
 }
 
-func (ec *executionContext) unmarshalNDate2string(ctx context.Context, v interface{}) (string, error) {
-	return graphql.UnmarshalString(v)
+func (ec *executionContext) unmarshalNDate2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return gqlmodel.UnmarshalDate(v)
 }
 
-func (ec *executionContext) marshalNDate2string(ctx context.Context, sel ast.SelectionSet, v string) graphql.Marshaler {
-	res := graphql.MarshalString(v)
+func (ec *executionContext) marshalNDate2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	res := gqlmodel.MarshalDate(v)
 	if res == graphql.Null {
 		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
 			ec.Errorf(ctx, "must not be null")
