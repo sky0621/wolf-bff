@@ -14,15 +14,7 @@ import (
 
 const dateLayout = "2006-01-02"
 
-func MarshalDate(t time.Time) graphql.Marshaler {
-	return graphql.WriterFunc(func(w io.Writer) {
-		_, err := io.WriteString(w, strconv.Quote(t.Format(dateLayout)))
-		if err != nil {
-			log.Print(err)
-		}
-	})
-}
-
+// UnmarshalDate GraphQL -> Domain
 func UnmarshalDate(v interface{}) (time.Time, error) {
 	s, ok := v.(string)
 	if !ok {
@@ -33,4 +25,14 @@ func UnmarshalDate(v interface{}) (time.Time, error) {
 		return time.Time{}, xerrors.Errorf("failed to ParseInLocation: %w", err)
 	}
 	return t, nil
+}
+
+// MarshalDate Domain -> GraphQL
+func MarshalDate(v time.Time) graphql.Marshaler {
+	return graphql.WriterFunc(func(w io.Writer) {
+		_, err := io.WriteString(w, strconv.Quote(v.Format(dateLayout)))
+		if err != nil {
+			log.Print(err)
+		}
+	})
 }

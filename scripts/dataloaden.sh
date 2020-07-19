@@ -12,4 +12,4 @@ cd ${SCRIPT_DIR} && cd ../src/adapter/controller/gqlmodel
 
 # https://github.com/vektah/dataloaden
 go get -u github.com/vektah/dataloaden@v0.3.0
-dataloaden ContentLoader string []github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel.Content
+dataloaden ContentLoader int64 []github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel.Content

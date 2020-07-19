@@ -97,7 +97,7 @@ type VoiceContentInput struct {
 // 「今日こと」検索条件
 type WhtConditionInput struct {
 	// ID
-	ID *string `json:"id"`
+	ID *WhtID `json:"id"`
 }
 
 // コンテンツタイプ

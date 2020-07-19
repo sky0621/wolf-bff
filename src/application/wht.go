@@ -8,13 +8,17 @@ import (
 	"github.com/sky0621/wolf-bff/src/application/model"
 )
 
-func NewWht(wht WhtRepository, content ContentRepository) *Wht {
+func NewWht(wht WhtRepository, content *ContentRepository) *Wht {
 	return &Wht{whtRepository: wht, contentRepository: content}
+}
+
+func NewWhtOnly(wht WhtRepository) *Wht {
+	return NewWht(wht, nil)
 }
 
 type Wht struct {
 	whtRepository     WhtRepository
-	contentRepository ContentRepository
+	contentRepository *ContentRepository
 }
 
 func (w Wht) CreateWht(ctx context.Context, in model.WhtInput) (int64, error) {

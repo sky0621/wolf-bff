@@ -1,5 +1,5 @@
 
-CREATE TYPE content_type AS ENUM('Text', 'Image', 'Voice', 'Movie', 'Other');
+CREATE TYPE content_type AS ENUM('Text', 'Image', 'Voice', 'Movie');
 
 CREATE TABLE wht (
   id bigserial NOT NULL,

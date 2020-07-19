@@ -10,7 +10,7 @@ import (
 // ContentLoaderConfig captures the config to create a new ContentLoader
 type ContentLoaderConfig struct {
 	// Fetch is a method that provides the data for the loader
-	Fetch func(keys []string) ([][]Content, []error)
+	Fetch func(keys []int64) ([][]Content, []error)
 
 	// Wait is how long wait before sending a batch
 	Wait time.Duration
@@ -31,7 +31,7 @@ func NewContentLoader(config ContentLoaderConfig) *ContentLoader {
 // ContentLoader batches and caches requests
 type ContentLoader struct {
 	// this method provides the data for the loader
-	fetch func(keys []string) ([][]Content, []error)
+	fetch func(keys []int64) ([][]Content, []error)
 
 	// how long to done before sending a batch
 	wait time.Duration
@@ -42,7 +42,7 @@ type ContentLoader struct {
 	// INTERNAL
 
 	// lazily created cache
-	cache map[string][]Content
+	cache map[int64][]Content
 
 	// the current batch. keys will continue to be collected until timeout is hit,
 	// then everything will be sent to the fetch method and out to the listeners
@@ -53,7 +53,7 @@ type ContentLoader struct {
 }
 
 type contentLoaderBatch struct {
-	keys    []string
+	keys    []int64
 	data    [][]Content
 	error   []error
 	closing bool
@@ -61,14 +61,14 @@ type contentLoaderBatch struct {
 }
 
 // Load a Content by key, batching and caching will be applied automatically
-func (l *ContentLoader) Load(key string) ([]Content, error) {
+func (l *ContentLoader) Load(key int64) ([]Content, error) {
 	return l.LoadThunk(key)()
 }
 
 // LoadThunk returns a function that when called will block waiting for a Content.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *ContentLoader) LoadThunk(key string) func() ([]Content, error) {
+func (l *ContentLoader) LoadThunk(key int64) func() ([]Content, error) {
 	l.mu.Lock()
 	if it, ok := l.cache[key]; ok {
 		l.mu.Unlock()
@@ -111,7 +111,7 @@ func (l *ContentLoader) LoadThunk(key string) func() ([]Content, error) {
 
 // LoadAll fetches many keys at once. It will be broken into appropriate sized
 // sub batches depending on how the loader is configured
-func (l *ContentLoader) LoadAll(keys []string) ([][]Content, []error) {
+func (l *ContentLoader) LoadAll(keys []int64) ([][]Content, []error) {
 	results := make([]func() ([]Content, error), len(keys))
 
 	for i, key := range keys {
@@ -129,7 +129,7 @@ func (l *ContentLoader) LoadAll(keys []string) ([][]Content, []error) {
 // LoadAllThunk returns a function that when called will block waiting for a Contents.
 // This method should be used if you want one goroutine to make requests to many
 // different data loaders without blocking until the thunk is called.
-func (l *ContentLoader) LoadAllThunk(keys []string) func() ([][]Content, []error) {
+func (l *ContentLoader) LoadAllThunk(keys []int64) func() ([][]Content, []error) {
 	results := make([]func() ([]Content, error), len(keys))
 	for i, key := range keys {
 		results[i] = l.LoadThunk(key)
@@ -147,7 +147,7 @@ func (l *ContentLoader) LoadAllThunk(keys []string) func() ([][]Content, []error
 // Prime the cache with the provided key and value. If the key already exists, no change is made
 // and false is returned.
 // (To forcefully prime the cache, clear the key first with loader.clear(key).prime(key, value).)
-func (l *ContentLoader) Prime(key string, value []Content) bool {
+func (l *ContentLoader) Prime(key int64, value []Content) bool {
 	l.mu.Lock()
 	var found bool
 	if _, found = l.cache[key]; !found {
@@ -162,22 +162,22 @@ func (l *ContentLoader) Prime(key string, value []Content) bool {
 }
 
 // Clear the value at key from the cache, if it exists
-func (l *ContentLoader) Clear(key string) {
+func (l *ContentLoader) Clear(key int64) {
 	l.mu.Lock()
 	delete(l.cache, key)
 	l.mu.Unlock()
 }
 
-func (l *ContentLoader) unsafeSet(key string, value []Content) {
+func (l *ContentLoader) unsafeSet(key int64, value []Content) {
 	if l.cache == nil {
-		l.cache = map[string][]Content{}
+		l.cache = map[int64][]Content{}
 	}
 	l.cache[key] = value
 }
 
 // keyIndex will return the location of the key in the batch, if its not found
 // it will add the key to the batch
-func (b *contentLoaderBatch) keyIndex(l *ContentLoader, key string) int {
+func (b *contentLoaderBatch) keyIndex(l *ContentLoader, key int64) int {
 	for i, existingKey := range b.keys {
 		if key == existingKey {
 			return i

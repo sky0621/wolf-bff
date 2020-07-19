@@ -29,6 +29,7 @@ type NoopPayload {
 
 scalar Date
 scalar Upload
+scalar WhtID
 
 directive @hasRole(role: Role!) on FIELD_DEFINITION
 

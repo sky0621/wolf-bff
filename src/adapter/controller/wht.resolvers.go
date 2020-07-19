@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
+
+	"github.com/sky0621/wolf-bff/src/internal"
 
 	"github.com/sky0621/wolf-bff/src/application/domain"
 
@@ -25,7 +28,7 @@ import (
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, wht.ToModel())
+		id, err := application.NewWhtOnly(gateway.NewWhtRepository(txx)).CreateWht(ctx, wht.ToModel())
 		if err != nil {
 			return nil, xerrors.Errorf("failed to CreateWht: %w", err)
 		}
@@ -59,13 +62,28 @@ func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []gql
 // ------------------------------------------------------------------
 
 func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
-	var condition *domain.WhtCondition
-	application.NewWht(gateway.NewWhtRepository(r.db)).ReadWht(ctx, condition)
-	return nil, nil
+	c := &domain.WhtCondition{}
+	if condition != nil {
+		id := domain.ID(condition.ID.DBUniqueID())
+		c.ID = &id
+	}
+	records, err := application.NewWhtOnly(gateway.NewWhtRepository(r.db)).ReadWht(ctx, c)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to ReadWht: %w", err)
+	}
+	var results []gqlmodel.Wht
+	for _, r := range records {
+		results = append(results, gqlmodel.Wht{
+			ID:         gqlmodel.WhtID(r.ID),
+			RecordDate: time.Time(r.RecordDate),
+			Title:      internal.PStr(r.Title.String()),
+		})
+	}
+	return results, nil
 }
 
 func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
-	contents, err := For(ctx).contentLoader.Load(obj.ID)
+	contents, err := For(ctx).contentLoader.Load(obj.ID.DBUniqueID())
 	if err != nil {
 		// TODO: logger
 		log.Println(err)

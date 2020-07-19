@@ -473,7 +473,7 @@ extend type Query {
 "「今日こと」検索条件"
 input WhtConditionInput {
     "ID"
-    id: ID
+    id: WhtID
 }
 
 "今日こと"
@@ -574,6 +574,7 @@ type NoopPayload {
 
 scalar Date
 scalar Upload
+scalar WhtID
 
 directive @hasRole(role: Role!) on FIELD_DEFINITION
 
@@ -1786,9 +1787,9 @@ func (ec *executionContext) _Wht_id(ctx context.Context, field graphql.Collected
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.(gqlmodel.WhtID)
 	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
+	return ec.marshalNID2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Wht_recordDate(ctx context.Context, field graphql.CollectedField, obj *gqlmodel.Wht) (ret graphql.Marshaler) {
@@ -3043,7 +3044,7 @@ func (ec *executionContext) unmarshalInputWhtConditionInput(ctx context.Context,
 		switch k {
 		case "id":
 			var err error
-			it.ID, err = ec.unmarshalOID2ᚖstring(ctx, v)
+			it.ID, err = ec.unmarshalOWhtID2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -3804,6 +3805,15 @@ func (ec *executionContext) marshalNDate2timeᚐTime(ctx context.Context, sel as
 	return res
 }
 
+func (ec *executionContext) unmarshalNID2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx context.Context, v interface{}) (gqlmodel.WhtID, error) {
+	var res gqlmodel.WhtID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalNID2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx context.Context, sel ast.SelectionSet, v gqlmodel.WhtID) graphql.Marshaler {
+	return v
+}
+
 func (ec *executionContext) unmarshalNID2string(ctx context.Context, v interface{}) (string, error) {
 	return graphql.UnmarshalID(v)
 }
@@ -4342,6 +4352,30 @@ func (ec *executionContext) unmarshalOWhtConditionInput2ᚖgithubᚗcomᚋsky062
 	}
 	res, err := ec.unmarshalOWhtConditionInput2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtConditionInput(ctx, v)
 	return &res, err
+}
+
+func (ec *executionContext) unmarshalOWhtID2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx context.Context, v interface{}) (gqlmodel.WhtID, error) {
+	var res gqlmodel.WhtID
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOWhtID2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx context.Context, sel ast.SelectionSet, v gqlmodel.WhtID) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOWhtID2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx context.Context, v interface{}) (*gqlmodel.WhtID, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOWhtID2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOWhtID2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐWhtID(ctx context.Context, sel ast.SelectionSet, v *gqlmodel.WhtID) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
 }
 
 func (ec *executionContext) marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx context.Context, sel ast.SelectionSet, v []introspection.EnumValue) graphql.Marshaler {

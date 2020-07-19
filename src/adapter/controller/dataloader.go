@@ -21,7 +21,7 @@ func DataLoaderMiddleware(resolver *Resolver, next http.Handler) http.Handler {
 			contentLoader: gqlmodel.NewContentLoader(gqlmodel.ContentLoaderConfig{
 				MaxBatch: 100,
 				Wait:     1 * time.Millisecond,
-				Fetch: func(keys []string) ([][]gqlmodel.Content, []error) {
+				Fetch: func(keys []int64) ([][]gqlmodel.Content, []error) {
 					fmt.Println(r.Context())
 					// FIXME:
 

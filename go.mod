@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/common v0.4.0
 	github.com/rs/zerolog v1.19.0
-	github.com/spf13/afero v1.3.1 // indirect
+	github.com/spf13/afero v1.3.2 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/spf13/viper v1.7.0

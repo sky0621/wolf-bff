@@ -69,3 +69,7 @@ func (v *Title) Validate() bool {
 	}
 	return true
 }
+
+func (v *Title) String() string {
+	return string(v)
+}
