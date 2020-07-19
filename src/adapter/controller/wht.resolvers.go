@@ -9,6 +9,8 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/sky0621/wolf-bff/src/application/domain"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/adapter"
 	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
@@ -16,6 +18,10 @@ import (
 	"github.com/sky0621/wolf-bff/src/application"
 	"golang.org/x/xerrors"
 )
+
+// ------------------------------------------------------------------
+// Mutation
+// ------------------------------------------------------------------
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
@@ -48,8 +54,13 @@ func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []gql
 	panic(fmt.Errorf("not implemented"))
 }
 
+// ------------------------------------------------------------------
+// Query
+// ------------------------------------------------------------------
+
 func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
-	//application.NewWht(gateway.NewWhtRepository(r.db)).CreateWht()
+	var condition *domain.WhtCondition
+	application.NewWht(gateway.NewWhtRepository(r.db)).ReadWht(ctx, condition)
 	return nil, nil
 }
 
