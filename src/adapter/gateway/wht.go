@@ -14,8 +14,6 @@ import (
 	"github.com/sky0621/wolf-bff/src/application"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-
-	"github.com/sky0621/wolf-bff/src/application/model"
 )
 
 func NewWhtRepository(db boil.ContextExecutor) application.WhtRepository {
@@ -26,7 +24,7 @@ type whtRepository struct {
 	db boil.ContextExecutor
 }
 
-func (r *whtRepository) Create(ctx context.Context, in model.WhtInput) (int64, error) {
+func (r *whtRepository) Create(ctx context.Context, in domain.Wht) (int64, error) {
 	mdl := sqlboilermodel.WHT{
 		Recorddate: time.Now(),
 		Title:      null.StringFromPtr(in.Title),
@@ -41,7 +39,7 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 	var mod []qm.QueryMod
 	if condition != nil {
 		if condition.ID != nil {
-			mod = append(mod, sqlboilermodel.WHTWhere.ID.EQ(condition.ID.ToPrimitive()))
+			mod = append(mod, sqlboilermodel.WHTWhere.ID.EQ(*condition.ID))
 		}
 	}
 	records, err := sqlboilermodel.WHTS(mod...).All(ctx, r.db)

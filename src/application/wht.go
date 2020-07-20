@@ -4,32 +4,25 @@ import (
 	"context"
 
 	"github.com/sky0621/wolf-bff/src/application/domain"
-
-	"github.com/sky0621/wolf-bff/src/application/model"
 )
 
-func NewWht(wht WhtRepository, content *ContentRepository) *Wht {
-	return &Wht{whtRepository: wht, contentRepository: content}
-}
-
-func NewWhtOnly(wht WhtRepository) *Wht {
-	return NewWht(wht, nil)
+func NewWht(repository WhtRepository) *Wht {
+	return &Wht{repository: repository}
 }
 
 type Wht struct {
-	whtRepository     WhtRepository
-	contentRepository *ContentRepository
+	repository WhtRepository
 }
 
-func (w Wht) CreateWht(ctx context.Context, in model.WhtInput) (int64, error) {
-	return w.whtRepository.Create(ctx, in)
+func (w Wht) CreateWht(ctx context.Context, in domain.Wht) (int64, error) {
+	return w.repository.Create(ctx, in)
 }
 
 func (w Wht) ReadWht(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error) {
-	return w.whtRepository.Read(ctx, condition)
+	return w.repository.Read(ctx, condition)
 }
 
 type WhtRepository interface {
-	Create(ctx context.Context, in model.WhtInput) (int64, error)
+	Create(ctx context.Context, in domain.Wht) (int64, error)
 	Read(ctx context.Context, condition *domain.WhtCondition) ([]*domain.Wht, error)
 }

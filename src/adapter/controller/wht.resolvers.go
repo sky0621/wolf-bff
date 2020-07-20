@@ -5,12 +5,9 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"log"
 	"strconv"
-	"time"
-
-	"github.com/sky0621/wolf-bff/src/internal"
 
 	"github.com/sky0621/wolf-bff/src/application/domain"
 
@@ -28,15 +25,20 @@ import (
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-		id, err := application.NewWhtOnly(gateway.NewWhtRepository(txx)).CreateWht(ctx, wht.ToModel())
+
+		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, wht.ToModel())
 		if err != nil {
 			return nil, xerrors.Errorf("failed to CreateWht: %w", err)
 		}
 		return &adapter.TxResponse{CreatedID: id}, nil
+
 	})
 	if err != nil {
-		return nil, xerrors.Errorf("failed to Tx: %w", err)
+		// TODO: logger
+		fmt.Printf("%#+v", err)
+		return nil, err
 	}
+
 	id := strconv.Itoa(int(res.CreatedID))
 	return &gqlmodel.MutationResponse{ID: &id}, nil
 }
@@ -64,19 +66,29 @@ func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []gql
 func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtConditionInput) ([]gqlmodel.Wht, error) {
 	c := &domain.WhtCondition{}
 	if condition != nil {
-		id := domain.ID(condition.ID.DBUniqueID())
+		id := condition.ID.DBUniqueID()
 		c.ID = &id
 	}
-	records, err := application.NewWhtOnly(gateway.NewWhtRepository(r.db)).ReadWht(ctx, c)
+
+	records, err := application.NewWht(gateway.NewWhtRepository(r.db)).ReadWht(ctx, c)
 	if err != nil {
-		return nil, xerrors.Errorf("failed to ReadWht: %w", err)
+		// TODO: logger
+		fmt.Printf("%#+v", err)
+		return nil, err
 	}
+
 	var results []gqlmodel.Wht
 	for _, r := range records {
+		if r.ID == nil || r.RecordDate == nil {
+			// TODO: logger
+			err := errors.New("id or recordDate is nil")
+			fmt.Printf("%#+v", err)
+			return nil, err
+		}
 		results = append(results, gqlmodel.Wht{
-			ID:         gqlmodel.WhtID(r.ID),
-			RecordDate: time.Time(r.RecordDate),
-			Title:      internal.PStr(r.Title.String()),
+			ID:         gqlmodel.WhtID(*r.ID),
+			RecordDate: *r.RecordDate,
+			Title:      r.Title,
 		})
 	}
 	return results, nil
@@ -86,7 +98,7 @@ func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmod
 	contents, err := For(ctx).contentLoader.Load(obj.ID.DBUniqueID())
 	if err != nil {
 		// TODO: logger
-		log.Println(err)
+		fmt.Printf("%#+v", err)
 		return nil, err
 	}
 	return contents, nil

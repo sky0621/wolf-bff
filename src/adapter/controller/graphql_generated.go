@@ -442,24 +442,32 @@ input WhtInput {
 
 "テキストコンテンツインプット"
 input TextContentInput {
+    "コンテンツ名"
+    name: String
     "テキスト"
     text: String!
 }
 
 "画像コンテンツインプット"
 input ImageContentInput {
+    "コンテンツ名"
+    name: String
     "画像"
     image: Upload!
 }
 
 "音声コンテンツインプット"
 input VoiceContentInput {
+    "コンテンツ名"
+    name: String
     "音声"
     voice: Upload!
 }
 
 "動画コンテンツインプット"
 input MovieContentInput {
+    "コンテンツ名"
+    name: String
     "動画"
     movie: Upload!
 }
@@ -572,8 +580,12 @@ type NoopPayload {
   clientMutationId: String
 }
 
+# Date ... format: "2006/01/02"
 scalar Date
+
 scalar Upload
+
+# WhtID ... format: urlEncoded("typeName:dbUniqueID")
 scalar WhtID
 
 directive @hasRole(role: Role!) on FIELD_DEFINITION
@@ -2952,6 +2964,12 @@ func (ec *executionContext) unmarshalInputImageContentInput(ctx context.Context,
 
 	for k, v := range asMap {
 		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "image":
 			var err error
 			it.Image, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
@@ -2970,6 +2988,12 @@ func (ec *executionContext) unmarshalInputMovieContentInput(ctx context.Context,
 
 	for k, v := range asMap {
 		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "movie":
 			var err error
 			it.Movie, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)
@@ -3006,6 +3030,12 @@ func (ec *executionContext) unmarshalInputTextContentInput(ctx context.Context, 
 
 	for k, v := range asMap {
 		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "text":
 			var err error
 			it.Text, err = ec.unmarshalNString2string(ctx, v)
@@ -3024,6 +3054,12 @@ func (ec *executionContext) unmarshalInputVoiceContentInput(ctx context.Context,
 
 	for k, v := range asMap {
 		switch k {
+		case "name":
+			var err error
+			it.Name, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "voice":
 			var err error
 			it.Voice, err = ec.unmarshalNUpload2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚐUpload(ctx, v)

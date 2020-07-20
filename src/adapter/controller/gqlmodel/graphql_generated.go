@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"strconv"
+	"time"
 
 	"github.com/99designs/gqlgen/graphql"
 )
@@ -27,6 +28,8 @@ func (ImageContent) IsContent() {}
 
 // 画像コンテンツインプット
 type ImageContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
 	// 画像
 	Image graphql.Upload `json:"image"`
 }
@@ -44,6 +47,8 @@ func (MovieContent) IsContent() {}
 
 // 動画コンテンツインプット
 type MovieContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
 	// 動画
 	Movie graphql.Upload `json:"movie"`
 }
@@ -73,6 +78,8 @@ func (TextContent) IsContent() {}
 
 // テキストコンテンツインプット
 type TextContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
 	// テキスト
 	Text string `json:"text"`
 }
@@ -90,6 +97,8 @@ func (VoiceContent) IsContent() {}
 
 // 音声コンテンツインプット
 type VoiceContentInput struct {
+	// コンテンツ名
+	Name *string `json:"name"`
 	// 音声
 	Voice graphql.Upload `json:"voice"`
 }
@@ -98,6 +107,14 @@ type VoiceContentInput struct {
 type WhtConditionInput struct {
 	// ID
 	ID *WhtID `json:"id"`
+}
+
+// 今日ことインプット
+type WhtInput struct {
+	// 記録日
+	RecordDate time.Time `json:"recordDate"`
+	// タイトル
+	Title *string `json:"title"`
 }
 
 // コンテンツタイプ

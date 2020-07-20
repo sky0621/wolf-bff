@@ -22,24 +22,32 @@ input WhtInput {
 
 "テキストコンテンツインプット"
 input TextContentInput {
+    "コンテンツ名"
+    name: String
     "テキスト"
     text: String!
 }
 
 "画像コンテンツインプット"
 input ImageContentInput {
+    "コンテンツ名"
+    name: String
     "画像"
     image: Upload!
 }
 
 "音声コンテンツインプット"
 input VoiceContentInput {
+    "コンテンツ名"
+    name: String
     "音声"
     voice: Upload!
 }
 
 "動画コンテンツインプット"
 input MovieContentInput {
+    "コンテンツ名"
+    name: String
     "動画"
     movie: Upload!
 }

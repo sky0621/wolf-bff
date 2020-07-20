@@ -12,7 +12,7 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
-const dateLayout = "2006-01-02"
+const dateLayout = "2006/01/02"
 
 // UnmarshalDate GraphQL -> Domain
 func UnmarshalDate(v interface{}) (time.Time, error) {
