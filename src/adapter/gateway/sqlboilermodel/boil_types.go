@@ -50,12 +50,3 @@ func makeCacheKey(cols boil.Columns, nzDefaults []string) string {
 	strmangle.PutBuffer(buf)
 	return str
 }
-
-// Enum values for content_type
-const (
-	ContentTypeText  = "Text"
-	ContentTypeImage = "Image"
-	ContentTypeVoice = "Voice"
-	ContentTypeMovie = "Movie"
-	ContentTypeOther = "Other"
-)

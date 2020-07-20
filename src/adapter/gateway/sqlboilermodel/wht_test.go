@@ -875,7 +875,7 @@ func testWHTSSelect(t *testing.T) {
 }
 
 var (
-	whtDBTypes = map[string]string{`ID`: `bigint`, `Recorddate`: `timestamp without time zone`, `Title`: `character varying`, `ContentType`: `enum.content_type('Text','Image','Voice','Movie','Other')`}
+	whtDBTypes = map[string]string{`ID`: `bigint`, `RecordDate`: `timestamp without time zone`, `Title`: `character varying`, `CreatedBy`: `character varying`, `CreatedAt`: `timestamp with time zone`, `UpdatedBy`: `character varying`, `UpdatedAt`: `timestamp with time zone`}
 	_          = bytes.MinRead
 )
 

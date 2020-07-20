@@ -8,6 +8,20 @@ extend type Query {
 input WhtConditionInput {
     "ID"
     id: WhtID
+    "記録日"
+    recordDate: Date
+    "タイトル"
+    title: String
+    "検索方法"
+    compare: Compare
+}
+
+"検索方法"
+enum Compare {
+    "完全一致"
+    Equal
+    "曖昧検索"
+    Like
 }
 
 "今日こと"

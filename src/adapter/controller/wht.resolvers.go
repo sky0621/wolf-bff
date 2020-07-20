@@ -25,13 +25,14 @@ import (
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-
-		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, wht.ToModel())
+		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, domain.Wht{
+			RecordDate: &wht.RecordDate,
+			Title:      wht.Title,
+		})
 		if err != nil {
 			return nil, xerrors.Errorf("failed to CreateWht: %w", err)
 		}
 		return &adapter.TxResponse{CreatedID: id}, nil
-
 	})
 	if err != nil {
 		// TODO: logger

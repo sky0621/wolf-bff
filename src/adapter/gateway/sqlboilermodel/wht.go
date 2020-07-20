@@ -24,60 +24,54 @@ import (
 
 // WHT is an object representing the database table.
 type WHT struct {
-	ID          int64       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Recorddate  time.Time   `boil:"recorddate" json:"recorddate" toml:"recorddate" yaml:"recorddate"`
-	Title       null.String `boil:"title" json:"title,omitempty" toml:"title" yaml:"title,omitempty"`
-	ContentType string      `boil:"content_type" json:"content_type" toml:"content_type" yaml:"content_type"`
+	ID         int64       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	RecordDate time.Time   `boil:"record_date" json:"record_date" toml:"record_date" yaml:"record_date"`
+	Title      null.String `boil:"title" json:"title,omitempty" toml:"title" yaml:"title,omitempty"`
+	CreatedBy  null.String `boil:"created_by" json:"created_by,omitempty" toml:"created_by" yaml:"created_by,omitempty"`
+	CreatedAt  time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedBy  null.String `boil:"updated_by" json:"updated_by,omitempty" toml:"updated_by" yaml:"updated_by,omitempty"`
+	UpdatedAt  time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *whtR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L whtL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var WHTColumns = struct {
-	ID          string
-	Recorddate  string
-	Title       string
-	ContentType string
+	ID         string
+	RecordDate string
+	Title      string
+	CreatedBy  string
+	CreatedAt  string
+	UpdatedBy  string
+	UpdatedAt  string
 }{
-	ID:          "id",
-	Recorddate:  "recorddate",
-	Title:       "title",
-	ContentType: "content_type",
+	ID:         "id",
+	RecordDate: "record_date",
+	Title:      "title",
+	CreatedBy:  "created_by",
+	CreatedAt:  "created_at",
+	UpdatedBy:  "updated_by",
+	UpdatedAt:  "updated_at",
 }
 
 // Generated where
 
-type whereHelpertime_Time struct{ field string }
-
-func (w whereHelpertime_Time) EQ(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.EQ, x)
-}
-func (w whereHelpertime_Time) NEQ(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.NEQ, x)
-}
-func (w whereHelpertime_Time) LT(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LT, x)
-}
-func (w whereHelpertime_Time) LTE(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.LTE, x)
-}
-func (w whereHelpertime_Time) GT(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GT, x)
-}
-func (w whereHelpertime_Time) GTE(x time.Time) qm.QueryMod {
-	return qmhelper.Where(w.field, qmhelper.GTE, x)
-}
-
 var WHTWhere = struct {
-	ID          whereHelperint64
-	Recorddate  whereHelpertime_Time
-	Title       whereHelpernull_String
-	ContentType whereHelperstring
+	ID         whereHelperint64
+	RecordDate whereHelpertime_Time
+	Title      whereHelpernull_String
+	CreatedBy  whereHelpernull_String
+	CreatedAt  whereHelpertime_Time
+	UpdatedBy  whereHelpernull_String
+	UpdatedAt  whereHelpertime_Time
 }{
-	ID:          whereHelperint64{field: "\"wht\".\"id\""},
-	Recorddate:  whereHelpertime_Time{field: "\"wht\".\"recorddate\""},
-	Title:       whereHelpernull_String{field: "\"wht\".\"title\""},
-	ContentType: whereHelperstring{field: "\"wht\".\"content_type\""},
+	ID:         whereHelperint64{field: "\"wht\".\"id\""},
+	RecordDate: whereHelpertime_Time{field: "\"wht\".\"record_date\""},
+	Title:      whereHelpernull_String{field: "\"wht\".\"title\""},
+	CreatedBy:  whereHelpernull_String{field: "\"wht\".\"created_by\""},
+	CreatedAt:  whereHelpertime_Time{field: "\"wht\".\"created_at\""},
+	UpdatedBy:  whereHelpernull_String{field: "\"wht\".\"updated_by\""},
+	UpdatedAt:  whereHelpertime_Time{field: "\"wht\".\"updated_at\""},
 }
 
 // WHTRels is where relationship names are stored.
@@ -104,9 +98,9 @@ func (*whtR) NewStruct() *whtR {
 type whtL struct{}
 
 var (
-	whtAllColumns            = []string{"id", "recorddate", "title", "content_type"}
-	whtColumnsWithoutDefault = []string{"recorddate", "title", "content_type"}
-	whtColumnsWithDefault    = []string{"id"}
+	whtAllColumns            = []string{"id", "record_date", "title", "created_by", "created_at", "updated_by", "updated_at"}
+	whtColumnsWithoutDefault = []string{"record_date", "title", "created_by", "updated_by"}
+	whtColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	whtPrimaryKeyColumns     = []string{"id"}
 )
 
@@ -769,6 +763,16 @@ func (o *WHT) Insert(ctx context.Context, exec boil.ContextExecutor, columns boi
 	}
 
 	var err error
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		if o.UpdatedAt.IsZero() {
+			o.UpdatedAt = currTime
+		}
+	}
 
 	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
 		return err
@@ -844,6 +848,12 @@ func (o *WHT) Insert(ctx context.Context, exec boil.ContextExecutor, columns boi
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
 func (o *WHT) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		o.UpdatedAt = currTime
+	}
+
 	var err error
 	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
 		return 0, err
@@ -973,6 +983,14 @@ func (o WHTSlice) UpdateAll(ctx context.Context, exec boil.ContextExecutor, cols
 func (o *WHT) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("sqlboilermodel: no wht provided for upsert")
+	}
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		o.UpdatedAt = currTime
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {

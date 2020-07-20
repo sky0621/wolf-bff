@@ -16,4 +16,6 @@ type Wht struct {
 type WhtCondition struct {
 	// ID
 	ID *int64
+	// 記録日
+	RecordDate *time.Time
 }

@@ -677,7 +677,7 @@ func testContentTextsSelect(t *testing.T) {
 }
 
 var (
-	contentTextDBTypes = map[string]string{`ID`: `bigint`, `WHTID`: `bigint`, `Name`: `character varying`, `Text`: `text`}
+	contentTextDBTypes = map[string]string{`ID`: `bigint`, `WHTID`: `bigint`, `Name`: `character varying`, `Text`: `text`, `CreatedBy`: `character varying`, `CreatedAt`: `timestamp with time zone`, `UpdatedBy`: `character varying`, `UpdatedAt`: `timestamp with time zone`}
 	_                  = bytes.MinRead
 )
 

@@ -677,7 +677,7 @@ func testContentImagesSelect(t *testing.T) {
 }
 
 var (
-	contentImageDBTypes = map[string]string{`ID`: `bigint`, `WHTID`: `bigint`, `Name`: `character varying`, `Path`: `character varying`}
+	contentImageDBTypes = map[string]string{`ID`: `bigint`, `WHTID`: `bigint`, `Name`: `character varying`, `Path`: `character varying`, `CreatedBy`: `character varying`, `CreatedAt`: `timestamp with time zone`, `UpdatedBy`: `character varying`, `UpdatedAt`: `timestamp with time zone`}
 	_                   = bytes.MinRead
 )
 

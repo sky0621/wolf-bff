@@ -25,8 +25,8 @@ type whtRepository struct {
 }
 
 func (r *whtRepository) Create(ctx context.Context, in domain.Wht) (int64, error) {
-	mdl := sqlboilermodel.WHT{
-		Recorddate: time.Now(),
+	mdl := &sqlboilermodel.WHT{
+		RecordDate: time.Now(),
 		Title:      null.StringFromPtr(in.Title),
 	}
 	if err := mdl.Insert(ctx, r.db, boil.Infer()); err != nil {
@@ -41,6 +41,9 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 		if condition.ID != nil {
 			mod = append(mod, sqlboilermodel.WHTWhere.ID.EQ(*condition.ID))
 		}
+		if condition.RecordDate != nil {
+			mod = append(mod, sqlboilermodel.WHTWhere.RecordDate.EQ(*condition.RecordDate))
+		}
 	}
 	records, err := sqlboilermodel.WHTS(mod...).All(ctx, r.db)
 	if err != nil {
@@ -48,7 +51,37 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 	}
 	var results []*domain.Wht
 	for _, r := range records {
-		results = append(results, domain.NewWht(r.ID, r.Recorddate, r.Title.String))
+		results = append(results, &domain.Wht{
+			ID:         &r.ID,
+			RecordDate: &r.RecordDate,
+			Title:      r.Title.Ptr(),
+		})
 	}
 	return results, nil
+}
+
+func (r *whtRepository) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error) {
+	mdl := &sqlboilermodel.WHT{
+		ID:         *in.ID,
+		RecordDate: *in.RecordDate,
+		Title:      null.StringFromPtr(in.Title),
+	}
+	if err := mdl.Upsert(ctx, r.db, true,
+		[]string{sqlboilermodel.WHTColumns.RecordDate},
+		boil.Whitelist(
+			sqlboilermodel.WHTColumns.Title,
+			sqlboilermodel.WHTColumns.UpdatedAt,
+		),
+		boil.Whitelist(
+			sqlboilermodel.WHTColumns.RecordDate,
+			sqlboilermodel.WHTColumns.Title,
+		),
+	); err != nil {
+		return nil, xerrors.Errorf("failed to upsert wht: %w", err)
+	}
+	return &domain.Wht{
+		ID:         &mdl.ID,
+		RecordDate: &mdl.RecordDate,
+		Title:      mdl.Title.Ptr(),
+	}, nil
 }

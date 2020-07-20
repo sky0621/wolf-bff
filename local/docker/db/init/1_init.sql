@@ -1,11 +1,12 @@
 
-CREATE TYPE content_type AS ENUM('Text', 'Image', 'Voice', 'Movie');
-
 CREATE TABLE wht (
   id bigserial NOT NULL,
-  recordDate timestamp NOT NULL,
+  record_date timestamp NOT NULL,
   title varchar(256),
-  content_type content_type NOT NULL,
+  created_by varchar(256),
+  created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
+  updated_by varchar(256),
+  updated_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY (id)
 );
 
@@ -14,6 +15,10 @@ CREATE TABLE content_text (
   wht_id bigint REFERENCES wht(id) NOT NULL,
   name varchar(256),
   text text NOT NULL,
+  created_by varchar(256),
+  created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
+  updated_by varchar(256),
+  updated_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY (id)
 );
 
@@ -22,5 +27,9 @@ CREATE TABLE content_image (
   wht_id bigint REFERENCES wht(id) NOT NULL,
   name varchar(256),
   path varchar(1024) NOT NULL,
+  created_by varchar(256),
+  created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
+  updated_by varchar(256),
+  updated_at timestamp with time zone NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY (id)
 );

@@ -24,39 +24,59 @@ import (
 
 // ContentText is an object representing the database table.
 type ContentText struct {
-	ID    int64       `boil:"id" json:"id" toml:"id" yaml:"id"`
-	WHTID int64       `boil:"wht_id" json:"wht_id" toml:"wht_id" yaml:"wht_id"`
-	Name  null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
-	Text  string      `boil:"text" json:"text" toml:"text" yaml:"text"`
+	ID        int64       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	WHTID     int64       `boil:"wht_id" json:"wht_id" toml:"wht_id" yaml:"wht_id"`
+	Name      null.String `boil:"name" json:"name,omitempty" toml:"name" yaml:"name,omitempty"`
+	Text      string      `boil:"text" json:"text" toml:"text" yaml:"text"`
+	CreatedBy null.String `boil:"created_by" json:"created_by,omitempty" toml:"created_by" yaml:"created_by,omitempty"`
+	CreatedAt time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedBy null.String `boil:"updated_by" json:"updated_by,omitempty" toml:"updated_by" yaml:"updated_by,omitempty"`
+	UpdatedAt time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
 
 	R *contentTextR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L contentTextL  `boil:"-" json:"-" toml:"-" yaml:"-"`
 }
 
 var ContentTextColumns = struct {
-	ID    string
-	WHTID string
-	Name  string
-	Text  string
+	ID        string
+	WHTID     string
+	Name      string
+	Text      string
+	CreatedBy string
+	CreatedAt string
+	UpdatedBy string
+	UpdatedAt string
 }{
-	ID:    "id",
-	WHTID: "wht_id",
-	Name:  "name",
-	Text:  "text",
+	ID:        "id",
+	WHTID:     "wht_id",
+	Name:      "name",
+	Text:      "text",
+	CreatedBy: "created_by",
+	CreatedAt: "created_at",
+	UpdatedBy: "updated_by",
+	UpdatedAt: "updated_at",
 }
 
 // Generated where
 
 var ContentTextWhere = struct {
-	ID    whereHelperint64
-	WHTID whereHelperint64
-	Name  whereHelpernull_String
-	Text  whereHelperstring
+	ID        whereHelperint64
+	WHTID     whereHelperint64
+	Name      whereHelpernull_String
+	Text      whereHelperstring
+	CreatedBy whereHelpernull_String
+	CreatedAt whereHelpertime_Time
+	UpdatedBy whereHelpernull_String
+	UpdatedAt whereHelpertime_Time
 }{
-	ID:    whereHelperint64{field: "\"content_text\".\"id\""},
-	WHTID: whereHelperint64{field: "\"content_text\".\"wht_id\""},
-	Name:  whereHelpernull_String{field: "\"content_text\".\"name\""},
-	Text:  whereHelperstring{field: "\"content_text\".\"text\""},
+	ID:        whereHelperint64{field: "\"content_text\".\"id\""},
+	WHTID:     whereHelperint64{field: "\"content_text\".\"wht_id\""},
+	Name:      whereHelpernull_String{field: "\"content_text\".\"name\""},
+	Text:      whereHelperstring{field: "\"content_text\".\"text\""},
+	CreatedBy: whereHelpernull_String{field: "\"content_text\".\"created_by\""},
+	CreatedAt: whereHelpertime_Time{field: "\"content_text\".\"created_at\""},
+	UpdatedBy: whereHelpernull_String{field: "\"content_text\".\"updated_by\""},
+	UpdatedAt: whereHelpertime_Time{field: "\"content_text\".\"updated_at\""},
 }
 
 // ContentTextRels is where relationship names are stored.
@@ -80,9 +100,9 @@ func (*contentTextR) NewStruct() *contentTextR {
 type contentTextL struct{}
 
 var (
-	contentTextAllColumns            = []string{"id", "wht_id", "name", "text"}
-	contentTextColumnsWithoutDefault = []string{"wht_id", "name", "text"}
-	contentTextColumnsWithDefault    = []string{"id"}
+	contentTextAllColumns            = []string{"id", "wht_id", "name", "text", "created_by", "created_at", "updated_by", "updated_at"}
+	contentTextColumnsWithoutDefault = []string{"wht_id", "name", "text", "created_by", "updated_by"}
+	contentTextColumnsWithDefault    = []string{"id", "created_at", "updated_at"}
 	contentTextPrimaryKeyColumns     = []string{"id"}
 )
 
@@ -566,6 +586,16 @@ func (o *ContentText) Insert(ctx context.Context, exec boil.ContextExecutor, col
 	}
 
 	var err error
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		if o.UpdatedAt.IsZero() {
+			o.UpdatedAt = currTime
+		}
+	}
 
 	if err := o.doBeforeInsertHooks(ctx, exec); err != nil {
 		return err
@@ -641,6 +671,12 @@ func (o *ContentText) Insert(ctx context.Context, exec boil.ContextExecutor, col
 // See boil.Columns.UpdateColumnSet documentation to understand column list inference for updates.
 // Update does not automatically update the record in case of default values. Use .Reload() to refresh the records.
 func (o *ContentText) Update(ctx context.Context, exec boil.ContextExecutor, columns boil.Columns) (int64, error) {
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		o.UpdatedAt = currTime
+	}
+
 	var err error
 	if err = o.doBeforeUpdateHooks(ctx, exec); err != nil {
 		return 0, err
@@ -770,6 +806,14 @@ func (o ContentTextSlice) UpdateAll(ctx context.Context, exec boil.ContextExecut
 func (o *ContentText) Upsert(ctx context.Context, exec boil.ContextExecutor, updateOnConflict bool, conflictColumns []string, updateColumns, insertColumns boil.Columns) error {
 	if o == nil {
 		return errors.New("sqlboilermodel: no content_text provided for upsert")
+	}
+	if !boil.TimestampsAreSkipped(ctx) {
+		currTime := time.Now().In(boil.GetLocation())
+
+		if o.CreatedAt.IsZero() {
+			o.CreatedAt = currTime
+		}
+		o.UpdatedAt = currTime
 	}
 
 	if err := o.doBeforeUpsertHooks(ctx, exec); err != nil {
