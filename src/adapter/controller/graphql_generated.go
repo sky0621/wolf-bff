@@ -60,10 +60,10 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		CreateImageContents func(childComplexity int, inputs []gqlmodel.ImageContentInput) int
-		CreateMovieContents func(childComplexity int, inputs []gqlmodel.MovieContentInput) int
-		CreateTextContents  func(childComplexity int, inputs []gqlmodel.TextContentInput) int
-		CreateVoiceContents func(childComplexity int, inputs []gqlmodel.VoiceContentInput) int
+		CreateImageContents func(childComplexity int, recordDate time.Time, inputs []gqlmodel.ImageContentInput) int
+		CreateMovieContents func(childComplexity int, recordDate time.Time, inputs []gqlmodel.MovieContentInput) int
+		CreateTextContents  func(childComplexity int, recordDate time.Time, inputs []gqlmodel.TextContentInput) int
+		CreateVoiceContents func(childComplexity int, recordDate time.Time, inputs []gqlmodel.VoiceContentInput) int
 		CreateWht           func(childComplexity int, wht gqlmodel.WhtInput) int
 		Noop                func(childComplexity int, input *gqlmodel.NoopInput) int
 	}
@@ -104,10 +104,10 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	Noop(ctx context.Context, input *gqlmodel.NoopInput) (*gqlmodel.NoopPayload, error)
 	CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error)
-	CreateTextContents(ctx context.Context, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error)
-	CreateImageContents(ctx context.Context, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error)
-	CreateVoiceContents(ctx context.Context, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error)
-	CreateMovieContents(ctx context.Context, inputs []gqlmodel.MovieContentInput) (*gqlmodel.MutationResponse, error)
+	CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error)
+	CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error)
+	CreateVoiceContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error)
+	CreateMovieContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.MovieContentInput) (*gqlmodel.MutationResponse, error)
 }
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (gqlmodel.Node, error)
@@ -184,7 +184,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateImageContents(childComplexity, args["inputs"].([]gqlmodel.ImageContentInput)), true
+		return e.complexity.Mutation.CreateImageContents(childComplexity, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.ImageContentInput)), true
 
 	case "Mutation.createMovieContents":
 		if e.complexity.Mutation.CreateMovieContents == nil {
@@ -196,7 +196,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateMovieContents(childComplexity, args["inputs"].([]gqlmodel.MovieContentInput)), true
+		return e.complexity.Mutation.CreateMovieContents(childComplexity, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.MovieContentInput)), true
 
 	case "Mutation.createTextContents":
 		if e.complexity.Mutation.CreateTextContents == nil {
@@ -208,7 +208,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateTextContents(childComplexity, args["inputs"].([]gqlmodel.TextContentInput)), true
+		return e.complexity.Mutation.CreateTextContents(childComplexity, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.TextContentInput)), true
 
 	case "Mutation.createVoiceContents":
 		if e.complexity.Mutation.CreateVoiceContents == nil {
@@ -220,7 +220,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CreateVoiceContents(childComplexity, args["inputs"].([]gqlmodel.VoiceContentInput)), true
+		return e.complexity.Mutation.CreateVoiceContents(childComplexity, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.VoiceContentInput)), true
 
 	case "Mutation.createWht":
 		if e.complexity.Mutation.CreateWht == nil {
@@ -423,13 +423,13 @@ extend type Mutation {
     "「今日こと」を登録"
     createWht(wht: WhtInput!): MutationResponse @hasRole(role: EDITOR)
     "テキストコンテンツを登録"
-    createTextContents(inputs: [TextContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    createTextContents(recordDate: Date!, inputs: [TextContentInput!]!): MutationResponse @hasRole(role: EDITOR)
     "画像コンテンツを登録"
-    createImageContents(inputs: [ImageContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    createImageContents(recordDate: Date!, inputs: [ImageContentInput!]!): MutationResponse @hasRole(role: EDITOR)
     "音声コンテンツを登録"
-    createVoiceContents(inputs: [VoiceContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    createVoiceContents(recordDate: Date!, inputs: [VoiceContentInput!]!): MutationResponse @hasRole(role: EDITOR)
     "動画コンテンツを登録"
-    createMovieContents(inputs: [MovieContentInput!]!): MutationResponse @hasRole(role: EDITOR)
+    createMovieContents(recordDate: Date!, inputs: [MovieContentInput!]!): MutationResponse @hasRole(role: EDITOR)
 }
 
 "今日ことインプット"
@@ -482,6 +482,20 @@ extend type Query {
 input WhtConditionInput {
     "ID"
     id: WhtID
+    "記録日"
+    recordDate: Date
+    "タイトル"
+    title: String
+    "検索方法"
+    compare: Compare
+}
+
+"検索方法"
+enum Compare {
+    "完全一致"
+    Equal
+    "曖昧検索"
+    Like
 }
 
 "今日こと"
@@ -621,56 +635,88 @@ func (ec *executionContext) dir_hasRole_args(ctx context.Context, rawArgs map[st
 func (ec *executionContext) field_Mutation_createImageContents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []gqlmodel.ImageContentInput
-	if tmp, ok := rawArgs["inputs"]; ok {
-		arg0, err = ec.unmarshalNImageContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐImageContentInputᚄ(ctx, tmp)
+	var arg0 time.Time
+	if tmp, ok := rawArgs["recordDate"]; ok {
+		arg0, err = ec.unmarshalNDate2timeᚐTime(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["inputs"] = arg0
+	args["recordDate"] = arg0
+	var arg1 []gqlmodel.ImageContentInput
+	if tmp, ok := rawArgs["inputs"]; ok {
+		arg1, err = ec.unmarshalNImageContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐImageContentInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["inputs"] = arg1
 	return args, nil
 }
 
 func (ec *executionContext) field_Mutation_createMovieContents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []gqlmodel.MovieContentInput
-	if tmp, ok := rawArgs["inputs"]; ok {
-		arg0, err = ec.unmarshalNMovieContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐMovieContentInputᚄ(ctx, tmp)
+	var arg0 time.Time
+	if tmp, ok := rawArgs["recordDate"]; ok {
+		arg0, err = ec.unmarshalNDate2timeᚐTime(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["inputs"] = arg0
+	args["recordDate"] = arg0
+	var arg1 []gqlmodel.MovieContentInput
+	if tmp, ok := rawArgs["inputs"]; ok {
+		arg1, err = ec.unmarshalNMovieContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐMovieContentInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["inputs"] = arg1
 	return args, nil
 }
 
 func (ec *executionContext) field_Mutation_createTextContents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []gqlmodel.TextContentInput
-	if tmp, ok := rawArgs["inputs"]; ok {
-		arg0, err = ec.unmarshalNTextContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐTextContentInputᚄ(ctx, tmp)
+	var arg0 time.Time
+	if tmp, ok := rawArgs["recordDate"]; ok {
+		arg0, err = ec.unmarshalNDate2timeᚐTime(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["inputs"] = arg0
+	args["recordDate"] = arg0
+	var arg1 []gqlmodel.TextContentInput
+	if tmp, ok := rawArgs["inputs"]; ok {
+		arg1, err = ec.unmarshalNTextContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐTextContentInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["inputs"] = arg1
 	return args, nil
 }
 
 func (ec *executionContext) field_Mutation_createVoiceContents_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []gqlmodel.VoiceContentInput
-	if tmp, ok := rawArgs["inputs"]; ok {
-		arg0, err = ec.unmarshalNVoiceContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐVoiceContentInputᚄ(ctx, tmp)
+	var arg0 time.Time
+	if tmp, ok := rawArgs["recordDate"]; ok {
+		arg0, err = ec.unmarshalNDate2timeᚐTime(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
 	}
-	args["inputs"] = arg0
+	args["recordDate"] = arg0
+	var arg1 []gqlmodel.VoiceContentInput
+	if tmp, ok := rawArgs["inputs"]; ok {
+		arg1, err = ec.unmarshalNVoiceContentInput2ᚕgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐVoiceContentInputᚄ(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["inputs"] = arg1
 	return args, nil
 }
 
@@ -1109,7 +1155,7 @@ func (ec *executionContext) _Mutation_createTextContents(ctx context.Context, fi
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateTextContents(rctx, args["inputs"].([]gqlmodel.TextContentInput))
+			return ec.resolvers.Mutation().CreateTextContents(rctx, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.TextContentInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			role, err := ec.unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐRole(ctx, "EDITOR")
@@ -1171,7 +1217,7 @@ func (ec *executionContext) _Mutation_createImageContents(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateImageContents(rctx, args["inputs"].([]gqlmodel.ImageContentInput))
+			return ec.resolvers.Mutation().CreateImageContents(rctx, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.ImageContentInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			role, err := ec.unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐRole(ctx, "EDITOR")
@@ -1233,7 +1279,7 @@ func (ec *executionContext) _Mutation_createVoiceContents(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateVoiceContents(rctx, args["inputs"].([]gqlmodel.VoiceContentInput))
+			return ec.resolvers.Mutation().CreateVoiceContents(rctx, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.VoiceContentInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			role, err := ec.unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐRole(ctx, "EDITOR")
@@ -1295,7 +1341,7 @@ func (ec *executionContext) _Mutation_createMovieContents(ctx context.Context, f
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CreateMovieContents(rctx, args["inputs"].([]gqlmodel.MovieContentInput))
+			return ec.resolvers.Mutation().CreateMovieContents(rctx, args["recordDate"].(time.Time), args["inputs"].([]gqlmodel.MovieContentInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			role, err := ec.unmarshalNRole2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐRole(ctx, "EDITOR")
@@ -3084,6 +3130,24 @@ func (ec *executionContext) unmarshalInputWhtConditionInput(ctx context.Context,
 			if err != nil {
 				return it, err
 			}
+		case "recordDate":
+			var err error
+			it.RecordDate, err = ec.unmarshalODate2ᚖtimeᚐTime(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "title":
+			var err error
+			it.Title, err = ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "compare":
+			var err error
+			it.Compare, err = ec.unmarshalOCompare2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐCompare(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		}
 	}
 
@@ -4289,6 +4353,53 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 		return graphql.Null
 	}
 	return ec.marshalOBoolean2bool(ctx, sel, *v)
+}
+
+func (ec *executionContext) unmarshalOCompare2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐCompare(ctx context.Context, v interface{}) (gqlmodel.Compare, error) {
+	var res gqlmodel.Compare
+	return res, res.UnmarshalGQL(v)
+}
+
+func (ec *executionContext) marshalOCompare2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐCompare(ctx context.Context, sel ast.SelectionSet, v gqlmodel.Compare) graphql.Marshaler {
+	return v
+}
+
+func (ec *executionContext) unmarshalOCompare2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐCompare(ctx context.Context, v interface{}) (*gqlmodel.Compare, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalOCompare2githubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐCompare(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalOCompare2ᚖgithubᚗcomᚋsky0621ᚋwolfᚑbffᚋsrcᚋadapterᚋcontrollerᚋgqlmodelᚐCompare(ctx context.Context, sel ast.SelectionSet, v *gqlmodel.Compare) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalODate2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
+	return gqlmodel.UnmarshalDate(v)
+}
+
+func (ec *executionContext) marshalODate2timeᚐTime(ctx context.Context, sel ast.SelectionSet, v time.Time) graphql.Marshaler {
+	return gqlmodel.MarshalDate(v)
+}
+
+func (ec *executionContext) unmarshalODate2ᚖtimeᚐTime(ctx context.Context, v interface{}) (*time.Time, error) {
+	if v == nil {
+		return nil, nil
+	}
+	res, err := ec.unmarshalODate2timeᚐTime(ctx, v)
+	return &res, err
+}
+
+func (ec *executionContext) marshalODate2ᚖtimeᚐTime(ctx context.Context, sel ast.SelectionSet, v *time.Time) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec.marshalODate2timeᚐTime(ctx, sel, *v)
 }
 
 func (ec *executionContext) unmarshalOID2string(ctx context.Context, v interface{}) (string, error) {

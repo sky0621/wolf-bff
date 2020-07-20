@@ -107,6 +107,12 @@ type VoiceContentInput struct {
 type WhtConditionInput struct {
 	// ID
 	ID *WhtID `json:"id"`
+	// 記録日
+	RecordDate *time.Time `json:"recordDate"`
+	// タイトル
+	Title *string `json:"title"`
+	// 検索方法
+	Compare *Compare `json:"compare"`
 }
 
 // 今日ことインプット
@@ -115,6 +121,50 @@ type WhtInput struct {
 	RecordDate time.Time `json:"recordDate"`
 	// タイトル
 	Title *string `json:"title"`
+}
+
+// 検索方法
+type Compare string
+
+const (
+	// 完全一致
+	CompareEqual Compare = "Equal"
+	// 曖昧検索
+	CompareLike Compare = "Like"
+)
+
+var AllCompare = []Compare{
+	CompareEqual,
+	CompareLike,
+}
+
+func (e Compare) IsValid() bool {
+	switch e {
+	case CompareEqual, CompareLike:
+		return true
+	}
+	return false
+}
+
+func (e Compare) String() string {
+	return string(e)
+}
+
+func (e *Compare) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = Compare(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid Compare", str)
+	}
+	return nil
+}
+
+func (e Compare) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
 // コンテンツタイプ

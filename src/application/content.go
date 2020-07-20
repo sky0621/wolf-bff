@@ -3,17 +3,21 @@ package application
 import (
 	"context"
 
-	"github.com/sky0621/wolf-bff/src/application/model"
+	"github.com/sky0621/wolf-bff/src/application/domain"
 )
 
-type Content struct {
-	ContentRepository ContentRepository
+func NewContent(repository ContentRepository) *Content {
+	return &Content{repository: repository}
 }
 
-func (w Content) CreateContent(ctx context.Context, in model.Content) error {
-	return w.ContentRepository.CreateContent(ctx, in)
+type Content struct {
+	repository ContentRepository
+}
+
+func (w Content) CreateContent(ctx context.Context, in domain.Content) error {
+	return w.repository.CreateContent(ctx, in)
 }
 
 type ContentRepository interface {
-	CreateContent(ctx context.Context, in model.Content) error
+	CreateContent(ctx context.Context, in domain.Content) error
 }

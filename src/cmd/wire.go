@@ -44,6 +44,7 @@ func connectDB(cfg config) (*sqlx.DB, error) {
 		return nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
 	}
 
+	// FIXME: 本番はNG?
 	boil.DebugMode = true
 
 	var loc *time.Location

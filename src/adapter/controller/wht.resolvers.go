@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/sky0621/wolf-bff/src/application/domain"
 
@@ -44,19 +45,62 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput)
 	return &gqlmodel.MutationResponse{ID: &id}, nil
 }
 
-func (r *mutationResolver) CreateTextContents(ctx context.Context, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
+func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
+	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
+		// 該当日の「今日こと」作成済みチェック
+		wht, err := application.NewWht(gateway.NewWhtRepository(txx)).GetWhtByRecordDate(ctx, recordDate)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", recordDate, err)
+		}
+
+		cnt := application.NewContent(gateway.NewContentRepository(txx))
+		if wht == nil {
+			for _, in := range inputs {
+				if err := cnt.CreateContent(ctx, domain.NewTextContent(in.Name, in.Text)); err != nil {
+					return nil, xerrors.Errorf("failed to CreateContent[in:%#+v]: %w", in, err)
+				}
+			}
+		} else {
+			for _, in := range inputs {
+				if err := cnt.CreateContent(ctx, domain.NewTextContent(in.Name, in.Text)); err != nil {
+					return nil, xerrors.Errorf("failed to CreateContent[in:%#+v]: %w", in, err)
+				}
+			}
+		}
+		return nil, nil
+	})
+	if err != nil {
+		// TODO: logger
+		fmt.Printf("%#+v", err)
+		return nil, err
+	}
+
+	id := strconv.Itoa(int(res.CreatedID))
+	return &gqlmodel.MutationResponse{ID: &id}, nil
+}
+
+func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
+	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
+		// FIXME:
+		return nil, nil
+	})
+	if err != nil {
+		// TODO: logger
+		fmt.Printf("%#+v", err)
+		return nil, err
+	}
+
+	id := strconv.Itoa(int(res.CreatedID))
+	return &gqlmodel.MutationResponse{ID: &id}, nil
+}
+
+func (r *mutationResolver) CreateVoiceContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error) {
+	// FIXME:
 	panic(fmt.Errorf("not implemented"))
 }
 
-func (r *mutationResolver) CreateImageContents(ctx context.Context, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *mutationResolver) CreateVoiceContents(ctx context.Context, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error) {
-	panic(fmt.Errorf("not implemented"))
-}
-
-func (r *mutationResolver) CreateMovieContents(ctx context.Context, inputs []gqlmodel.MovieContentInput) (*gqlmodel.MutationResponse, error) {
+func (r *mutationResolver) CreateMovieContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.MovieContentInput) (*gqlmodel.MutationResponse, error) {
+	// FIXME:
 	panic(fmt.Errorf("not implemented"))
 }
 
