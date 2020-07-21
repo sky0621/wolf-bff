@@ -53,18 +53,27 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 			return nil, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", recordDate, err)
 		}
 
-		cnt := application.NewContent(gateway.NewContentRepository(txx))
+		var whtID int64
 		if wht == nil {
-			for _, in := range inputs {
-				if err := cnt.CreateContent(ctx, domain.NewTextContent(in.Name, in.Text)); err != nil {
-					return nil, xerrors.Errorf("failed to CreateContent[in:%#+v]: %w", in, err)
-				}
+			var err error
+			// まず、該当日の分の「今日こと」を作成
+			whtID, err = application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, domain.Wht{
+				RecordDate: &recordDate,
+				Title:      wht.Title,
+			})
+			if err != nil {
+				return nil, xerrors.Errorf("failed to CreateWht: %w", err)
 			}
 		} else {
-			for _, in := range inputs {
-				if err := cnt.CreateContent(ctx, domain.NewTextContent(in.Name, in.Text)); err != nil {
-					return nil, xerrors.Errorf("failed to CreateContent[in:%#+v]: %w", in, err)
-				}
+			whtID = *wht.ID
+		}
+
+		// テキストコンテンツを作成
+		contentApp := application.NewContent(gateway.NewContentRepository(txx))
+		for _, in := range inputs {
+			// TODO: バッチ形式を検討！
+			if err := contentApp.CreateTextContent(ctx, whtID, domain.NewTextContent(in.Name, in.Text)); err != nil {
+				return nil, xerrors.Errorf("failed to CreateTextContent[whtID:%d][in:%#+v]: %w", whtID, in, err)
 			}
 		}
 		return nil, nil

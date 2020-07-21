@@ -14,10 +14,10 @@ type Content struct {
 	repository ContentRepository
 }
 
-func (w Content) CreateContent(ctx context.Context, in domain.Content) error {
-	return w.repository.CreateContent(ctx, in)
+func (w Content) CreateTextContent(ctx context.Context, whtID int64, in domain.TextContent) error {
+	return w.repository.CreateTextContent(ctx, whtID, in)
 }
 
 type ContentRepository interface {
-	CreateContent(ctx context.Context, in domain.Content) error
+	CreateTextContent(ctx context.Context, whtID int64, in domain.TextContent) error
 }
