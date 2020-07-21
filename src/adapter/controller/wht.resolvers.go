@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sky0621/wolf-bff/src/internal"
+
 	"github.com/sky0621/wolf-bff/src/application/domain"
 
 	"github.com/jmoiron/sqlx"
@@ -26,8 +28,19 @@ import (
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
+		// 該当日の「今日こと」作成済みチェック
+		already, err := application.NewWht(gateway.NewWhtRepository(txx)).GetWhtByRecordDate(ctx, wht.RecordDate)
+		if err != nil {
+			return nil, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", wht.RecordDate, err)
+		}
+		if already != nil {
+			// TODO: logger
+			fmt.Println("already exists")
+			return &adapter.TxResponse{CreatedID: *already.ID}, nil
+		}
+
 		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, domain.Wht{
-			RecordDate: &wht.RecordDate,
+			RecordDate: wht.RecordDate,
 			Title:      wht.Title,
 		})
 		if err != nil {
@@ -48,24 +61,23 @@ func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput)
 func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
 		// 該当日の「今日こと」作成済みチェック
-		wht, err := application.NewWht(gateway.NewWhtRepository(txx)).GetWhtByRecordDate(ctx, recordDate)
+		already, err := application.NewWht(gateway.NewWhtRepository(txx)).GetWhtByRecordDate(ctx, recordDate)
 		if err != nil {
 			return nil, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", recordDate, err)
 		}
 
 		var whtID int64
-		if wht == nil {
+		if already == nil {
 			var err error
 			// まず、該当日の分の「今日こと」を作成
 			whtID, err = application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, domain.Wht{
-				RecordDate: &recordDate,
-				Title:      wht.Title,
+				RecordDate: recordDate,
 			})
 			if err != nil {
 				return nil, xerrors.Errorf("failed to CreateWht: %w", err)
 			}
 		} else {
-			whtID = *wht.ID
+			whtID = *already.ID
 		}
 
 		// テキストコンテンツを作成
@@ -76,7 +88,7 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 				return nil, xerrors.Errorf("failed to CreateTextContent[whtID:%d][in:%#+v]: %w", whtID, in, err)
 			}
 		}
-		return nil, nil
+		return &adapter.TxResponse{CreatedID: whtID}, nil
 	})
 	if err != nil {
 		// TODO: logger
@@ -91,7 +103,7 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
 		// FIXME:
-		return nil, nil
+		return &adapter.TxResponse{CreatedID: 1}, nil
 	})
 	if err != nil {
 		// TODO: logger
@@ -133,7 +145,7 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 
 	var results []gqlmodel.Wht
 	for _, r := range records {
-		if r.ID == nil || r.RecordDate == nil {
+		if r.ID == nil || r.RecordDate == internal.NilTime {
 			// TODO: logger
 			err := errors.New("id or recordDate is nil")
 			fmt.Printf("%#+v", err)
@@ -141,7 +153,7 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 		}
 		results = append(results, gqlmodel.Wht{
 			ID:         gqlmodel.WhtID(*r.ID),
-			RecordDate: *r.RecordDate,
+			RecordDate: r.RecordDate,
 			Title:      r.Title,
 		})
 	}

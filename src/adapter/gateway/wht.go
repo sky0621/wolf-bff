@@ -2,7 +2,6 @@ package gateway
 
 import (
 	"context"
-	"time"
 
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
 
@@ -26,7 +25,7 @@ type whtRepository struct {
 
 func (r *whtRepository) Create(ctx context.Context, in domain.Wht) (int64, error) {
 	mdl := &sqlboilermodel.WHT{
-		RecordDate: time.Now(),
+		RecordDate: in.RecordDate,
 		Title:      null.StringFromPtr(in.Title),
 	}
 	if err := mdl.Insert(ctx, r.db, boil.Infer()); err != nil {
@@ -53,7 +52,7 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 	for _, r := range records {
 		results = append(results, &domain.Wht{
 			ID:         &r.ID,
-			RecordDate: &r.RecordDate,
+			RecordDate: r.RecordDate,
 			Title:      r.Title.Ptr(),
 		})
 	}
@@ -63,7 +62,7 @@ func (r *whtRepository) Read(ctx context.Context, condition *domain.WhtCondition
 func (r *whtRepository) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht, error) {
 	mdl := &sqlboilermodel.WHT{
 		ID:         *in.ID,
-		RecordDate: *in.RecordDate,
+		RecordDate: in.RecordDate,
 		Title:      null.StringFromPtr(in.Title),
 	}
 	if err := mdl.Upsert(ctx, r.db, true,
@@ -81,7 +80,7 @@ func (r *whtRepository) Upsert(ctx context.Context, in domain.Wht) (*domain.Wht,
 	}
 	return &domain.Wht{
 		ID:         &mdl.ID,
-		RecordDate: &mdl.RecordDate,
+		RecordDate: mdl.RecordDate,
 		Title:      mdl.Title.Ptr(),
 	}, nil
 }

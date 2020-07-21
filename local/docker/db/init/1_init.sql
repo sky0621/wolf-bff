@@ -1,7 +1,7 @@
 
 CREATE TABLE wht (
   id bigserial NOT NULL,
-  record_date timestamp NOT NULL,
+  record_date timestamp NOT NULL UNIQUE,
   title varchar(256),
   created_by varchar(256),
   created_at timestamp with time zone NOT NULL DEFAULT current_timestamp,

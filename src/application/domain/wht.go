@@ -7,7 +7,7 @@ type Wht struct {
 	// ID
 	ID *int64
 	// 記録日
-	RecordDate *time.Time
+	RecordDate time.Time
 	// タイトル
 	Title *string
 }
