@@ -11,15 +11,3 @@ type TextContent struct {
 	Name *string
 	Text string
 }
-
-func NewImageContent(name *string, path string) ImageContent {
-	return ImageContent{
-		Name: name,
-		Path: path,
-	}
-}
-
-type ImageContent struct {
-	Name *string
-	Path string
-}

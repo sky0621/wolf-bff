@@ -7,19 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
-
-	"github.com/sky0621/wolf-bff/src/internal"
-
-	"github.com/sky0621/wolf-bff/src/application/domain"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/sky0621/wolf-bff/src/adapter"
 	"github.com/sky0621/wolf-bff/src/adapter/controller/gqlmodel"
 	"github.com/sky0621/wolf-bff/src/adapter/gateway"
 	"github.com/sky0621/wolf-bff/src/application"
-	"golang.org/x/xerrors"
+	"github.com/sky0621/wolf-bff/src/application/domain"
+	"github.com/sky0621/wolf-bff/src/internal"
 )
 
 // ------------------------------------------------------------------
@@ -28,91 +24,37 @@ import (
 
 func (r *mutationResolver) CreateWht(ctx context.Context, wht gqlmodel.WhtInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-		// 該当日の「今日こと」作成済みチェック
-		already, err := application.NewWht(gateway.NewWhtRepository(txx)).GetWhtByRecordDate(ctx, wht.RecordDate)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", wht.RecordDate, err)
-		}
-		if already != nil {
-			// TODO: logger
-			fmt.Println("already exists")
-			return &adapter.TxResponse{CreatedID: *already.ID}, nil
-		}
-
-		id, err := application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, domain.Wht{
-			RecordDate: wht.RecordDate,
-			Title:      wht.Title,
-		})
-		if err != nil {
-			return nil, xerrors.Errorf("failed to CreateWht: %w", err)
-		}
-		return &adapter.TxResponse{CreatedID: id}, nil
+		id, err := application.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+			CreateWht(ctx, domain.Wht{RecordDate: wht.RecordDate, Title: wht.Title})
+		return &adapter.TxResponse{CreatedID: id}, err
 	})
 	if err != nil {
-		// TODO: logger
-		fmt.Printf("%#+v", err)
+		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
-
-	id := strconv.Itoa(int(res.CreatedID))
-	return &gqlmodel.MutationResponse{ID: &id}, nil
+	return &gqlmodel.MutationResponse{ID: internal.FromInt64ToPStr(res.CreatedID)}, nil
 }
 
 func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.TextContentInput) (*gqlmodel.MutationResponse, error) {
 	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-		// 該当日の「今日こと」作成済みチェック
-		already, err := application.NewWht(gateway.NewWhtRepository(txx)).GetWhtByRecordDate(ctx, recordDate)
-		if err != nil {
-			return nil, xerrors.Errorf("failed to GetWhtByRecordDate[recordDate:%#+v]: %w", recordDate, err)
-		}
-
-		var whtID int64
-		if already == nil {
-			var err error
-			// まず、該当日の分の「今日こと」を作成
-			whtID, err = application.NewWht(gateway.NewWhtRepository(txx)).CreateWht(ctx, domain.Wht{
-				RecordDate: recordDate,
-			})
-			if err != nil {
-				return nil, xerrors.Errorf("failed to CreateWht: %w", err)
-			}
-		} else {
-			whtID = *already.ID
-		}
-
-		// テキストコンテンツを作成
-		contentApp := application.NewContent(gateway.NewContentRepository(txx))
+		var contents []domain.TextContent
 		for _, in := range inputs {
-			// TODO: バッチ形式を検討！
-			if err := contentApp.CreateTextContent(ctx, whtID, domain.NewTextContent(in.Name, in.Text)); err != nil {
-				return nil, xerrors.Errorf("failed to CreateTextContent[whtID:%d][in:%#+v]: %w", whtID, in, err)
-			}
+			contents = append(contents, domain.NewTextContent(in.Name, in.Text))
 		}
-		return &adapter.TxResponse{CreatedID: whtID}, nil
+		err := application.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
+			CreateTextContent(ctx, recordDate, contents)
+		return &adapter.TxResponse{CreatedID: 0}, err
 	})
 	if err != nil {
-		// TODO: logger
-		fmt.Printf("%#+v", err)
+		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
-
-	id := strconv.Itoa(int(res.CreatedID))
-	return &gqlmodel.MutationResponse{ID: &id}, nil
+	return &gqlmodel.MutationResponse{ID: internal.FromInt64ToPStr(res.CreatedID)}, nil
 }
 
 func (r *mutationResolver) CreateImageContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.ImageContentInput) (*gqlmodel.MutationResponse, error) {
-	res, err := adapter.Tx(ctx, r.db, func(ctx context.Context, txx *sqlx.Tx) (*adapter.TxResponse, error) {
-		// FIXME:
-		return &adapter.TxResponse{CreatedID: 1}, nil
-	})
-	if err != nil {
-		// TODO: logger
-		fmt.Printf("%#+v", err)
-		return nil, err
-	}
-
-	id := strconv.Itoa(int(res.CreatedID))
-	return &gqlmodel.MutationResponse{ID: &id}, nil
+	// FIXME:
+	panic(fmt.Errorf("not implemented"))
 }
 
 func (r *mutationResolver) CreateVoiceContents(ctx context.Context, recordDate time.Time, inputs []gqlmodel.VoiceContentInput) (*gqlmodel.MutationResponse, error) {
