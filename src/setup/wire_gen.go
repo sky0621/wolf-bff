@@ -3,7 +3,7 @@
 //go:generate wire
 //+build !wireinject
 
-package main
+package setup
 
 import (
 	"context"
@@ -25,10 +25,6 @@ import (
 	"time"
 )
 
-import (
-	_ "github.com/lib/pq"
-)
-
 // Injectors from wire.go:
 
 func build(ctx context.Context, cfg config) (app, error) {
@@ -38,8 +34,8 @@ func build(ctx context.Context, cfg config) (app, error) {
 	}
 	resolver := controller.NewResolver(db)
 	mux := setupRouter(cfg, resolver)
-	mainApp := newApp(db, mux)
-	return mainApp, nil
+	setupApp := newApp(db, mux)
+	return setupApp, nil
 }
 
 // Injectors from wire_local.go:
@@ -51,8 +47,8 @@ func buildLocal(ctx context.Context, cfg config) (app, error) {
 	}
 	resolver := controller.NewResolver(db)
 	mux := setupRouter(cfg, resolver)
-	mainApp := newApp(db, mux)
-	return mainApp, nil
+	setupApp := newApp(db, mux)
+	return setupApp, nil
 }
 
 // wire.go:
@@ -117,7 +113,7 @@ func graphQlServer(resolver *controller.Resolver) *handler.Server {
 
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		log.Println(err)
-		return fmt.Errorf("Internal server error!")
+		return fmt.Errorf("internal server error! %v", err)
 	})
 
 	return srv

@@ -1,6 +1,6 @@
 //+build wireinject
 
-package main
+package setup
 
 import (
 	"context"

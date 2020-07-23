@@ -1,6 +1,6 @@
 //+build wireinject
 
-package main
+package setup
 
 import (
 	"context"
@@ -97,7 +97,7 @@ func graphQlServer(resolver *controller.Resolver) *handler.Server {
 
 	srv.SetRecoverFunc(func(ctx context.Context, err interface{}) error {
 		log.Println(err)
-		return fmt.Errorf("Internal server error!")
+		return fmt.Errorf("internal server error! %v", err)
 	})
 
 	return srv
