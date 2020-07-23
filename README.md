@@ -1,6 +1,8 @@
 # wolf-bff
 ## 概要
-「今日こと(What happened today)」システム(hodie)のBFF
+「今日こと(What happened today)」システムのBFF
+
+※なのだけど、とりあえずは当リポジトリで一通りの機能を仕上げる想定
 
 ## システムの目的
 子どものモチベーションアップ

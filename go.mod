@@ -17,7 +17,7 @@ require (
 	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/lib/pq v1.7.1
 	github.com/matryer/moq v0.0.0-20200607124540-4638a53893e6 // indirect
-	github.com/mitchellh/mapstructure v1.3.2 // indirect
+	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/common v0.4.0
@@ -33,9 +33,9 @@ require (
 	github.com/volatiletech/randomize v0.0.1
 	github.com/volatiletech/sqlboiler/v4 v4.2.0
 	github.com/volatiletech/strmangle v0.0.1
-	golang.org/x/sys v0.0.0-20200720211630-cb9d2d5c5666 // indirect
+	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6 // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200721032237-77f530d86f9a // indirect
+	golang.org/x/tools v0.0.0-20200723000907-a7c6fd066f6d // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )
