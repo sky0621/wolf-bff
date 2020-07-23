@@ -42,8 +42,8 @@ func (r *mutationResolver) CreateTextContents(ctx context.Context, recordDate ti
 			contents = append(contents, domain.NewTextContent(in.Name, in.Text))
 		}
 		err := application.NewWht(gateway.NewWhtRepository(txx), gateway.NewContentRepository(txx)).
-			CreateTextContent(ctx, recordDate, contents)
-		return &adapter.TxResponse{CreatedID: 0}, err
+			CreateTextContents(ctx, recordDate, contents)
+		return &adapter.TxResponse{CreatedID: 0}, err // TODO: think returning id when batch create
 	})
 	if err != nil {
 		fmt.Printf("%#+v", err) // TODO: use custom logger
@@ -78,19 +78,18 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 		c.ID = &id
 	}
 
-	records, err := application.NewWht(gateway.NewWhtRepository(r.db)).ReadWht(ctx, c)
+	records, err := application.NewWht(gateway.NewWhtRepository(r.db), gateway.NewContentRepository(r.db)).
+		ReadWht(ctx, c)
 	if err != nil {
-		// TODO: logger
-		fmt.Printf("%#+v", err)
+		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
 
 	var results []gqlmodel.Wht
 	for _, r := range records {
 		if r.ID == nil || r.RecordDate == internal.NilTime {
-			// TODO: logger
 			err := errors.New("id or recordDate is nil")
-			fmt.Printf("%#+v", err)
+			fmt.Printf("%#+v", err) // TODO: use custom logger
 			return nil, err
 		}
 		results = append(results, gqlmodel.Wht{
@@ -105,8 +104,7 @@ func (r *queryResolver) FindWht(ctx context.Context, condition *gqlmodel.WhtCond
 func (r *whtResolver) Contents(ctx context.Context, obj *gqlmodel.Wht) ([]gqlmodel.Content, error) {
 	contents, err := For(ctx).contentLoader.Load(obj.ID.DBUniqueID())
 	if err != nil {
-		// TODO: logger
-		fmt.Printf("%#+v", err)
+		fmt.Printf("%#+v", err) // TODO: use custom logger
 		return nil, err
 	}
 	return contents, nil

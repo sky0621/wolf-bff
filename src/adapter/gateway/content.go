@@ -23,14 +23,17 @@ type contentRepository struct {
 	db boil.ContextExecutor
 }
 
-func (r *contentRepository) CreateTextContent(ctx context.Context, whtID int64, in domain.TextContent) error {
-	mdl := sqlboilermodel.ContentText{
-		WHTID: whtID,
-		Name:  null.StringFromPtr(in.Name),
-		Text:  in.Text,
-	}
-	if err := mdl.Insert(ctx, r.db, boil.Infer()); err != nil {
-		return xerrors.Errorf("failed to insert content_text[whtID:%d][in:%#+v]: %w", whtID, in, err)
+func (r *contentRepository) CreateTextContents(ctx context.Context, whtID int64, inputs []domain.TextContent) error {
+	// TODO: バッチ形式を検討！
+	for _, in := range inputs {
+		mdl := sqlboilermodel.ContentText{
+			WHTID: whtID,
+			Name:  null.StringFromPtr(in.Name),
+			Text:  in.Text,
+		}
+		if err := mdl.Insert(ctx, r.db, boil.Infer()); err != nil {
+			return xerrors.Errorf("failed to insert content_text[whtID:%d][in:%#+v]: %w", whtID, in, err)
+		}
 	}
 	return nil
 }
