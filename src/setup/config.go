@@ -15,7 +15,10 @@ type config struct {
 	DBSSLMode  string `envconfig:"rdb_sslmode" split_words:"true" default:"disable"`
 
 	// Webサーバ設定用
-	WebPort string `default:"8765"`
+	WebPort string `default:"8080"`
+
+	// GCP接続用
+	ProjectID string `split_words:"true" default:"local"`
 }
 
 func newConfig() config {

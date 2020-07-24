@@ -41,7 +41,7 @@ func build(ctx context.Context, cfg config) (app, error) {
 // Injectors from wire_local.go:
 
 func buildLocal(ctx context.Context, cfg config) (app, error) {
-	db, err := connectDB(cfg)
+	db, err := connectLocalDB(cfg)
 	if err != nil {
 		return app{}, err
 	}
@@ -54,8 +54,8 @@ func buildLocal(ctx context.Context, cfg config) (app, error) {
 // wire.go:
 
 func connectDB(cfg config) (*sqlx.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
-		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPassword, cfg.DBSSLMode)
+	dsn := fmt.Sprintf("%s:%s@unix(/cloudsql/%s:asia-northeast1:%s)/%s",
+		cfg.DBUser, cfg.DBPassword, cfg.ProjectID, cfg.DBHost, cfg.DBName)
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
@@ -117,4 +117,26 @@ func graphQlServer(resolver *controller.Resolver) *handler.Server {
 	})
 
 	return srv
+}
+
+// wire_local.go:
+
+func connectLocalDB(cfg config) (*sqlx.DB, error) {
+	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPassword, cfg.DBSSLMode)
+
+	db, err := sqlx.Connect("postgres", dsn)
+	if err != nil {
+		return nil, xerrors.Errorf("failed to sqlx.Connect: %w", err)
+	}
+	boil.DebugMode = true
+
+	var loc *time.Location
+	loc, err = time.LoadLocation("Asia/Tokyo")
+	if err != nil {
+		panic(err)
+	}
+	boil.SetLocation(loc)
+
+	return db, nil
 }

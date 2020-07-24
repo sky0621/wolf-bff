@@ -1,8 +1,6 @@
-module github.com/sky0621/wolf-bff
+module github.com/sky0621/wolf-bff/src
 
 go 1.14
-
-replace github.com/sky0621/wolf-bff/src/setup => ./setup
 
 require (
 	github.com/99designs/gqlgen v0.11.3
@@ -32,7 +30,7 @@ require (
 	github.com/volatiletech/strmangle v0.0.1
 	golang.org/x/sys v0.0.0-20200722175500-76b94024e4b6 // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200723000907-a7c6fd066f6d // indirect
+	golang.org/x/tools v0.0.0-20200724022722-7017fd6b1305 // indirect
 	golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543
 	gopkg.in/ini.v1 v1.57.0 // indirect
 )

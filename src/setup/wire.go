@@ -36,8 +36,8 @@ func build(ctx context.Context, cfg config) (app, error) {
 }
 
 func connectDB(cfg config) (*sqlx.DB, error) {
-	dsn := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
-		cfg.DBHost, cfg.DBPort, cfg.DBName, cfg.DBUser, cfg.DBPassword, cfg.DBSSLMode)
+	dsn := fmt.Sprintf("%s:%s@unix(/cloudsql/%s:asia-northeast1:%s)/%s",
+		cfg.DBUser, cfg.DBPassword, cfg.ProjectID, cfg.DBHost, cfg.DBName)
 
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {

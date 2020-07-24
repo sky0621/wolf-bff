@@ -53,3 +53,14 @@ GraphQLフロントエンド（SSR）
 
 ### インセンティブ(Incentive)
 - 保護者は「インセンティブ」(incentive)を登録する。
+
+## CI/CD
+### build
+```bash
+gcloud builds submit --tag gcr.io/【GCPプロジェクトID】/wolf-bff
+```
+
+### deploy
+```bash
+gcloud run deploy --image gcr.io/【GCPプロジェクトID】/wolf-bff --platform managed
+```
