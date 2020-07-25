@@ -12,15 +12,17 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type exitCode int
+type ExitCode int
 
 const (
 	normalEnd   = 0
 	abnormalEnd = -1
 )
 
-func ExecMain() exitCode {
+func ExecMain() ExitCode {
 	cfg := newConfig()
+	log.Println(cfg)
+
 	ctx := context.Background()
 	var app app
 	var err error

@@ -20,4 +20,5 @@ gcloud run deploy \
   --platform managed \
   --project ${project} \
   --allow-unauthenticated \
-  --region asia-northeast1
+  --region asia-northeast1 \
+  --set-env-vars=[WHT_ENV=gcp,WHT_PROJECT_ID=${project}]
